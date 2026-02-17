@@ -1,0 +1,43 @@
+@model IEnumerable<HazelnutVeb.Models.Sale>
+
+@{
+    ViewData["Title"] = "Sales";
+}
+
+<h1>Sales</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Add Sale</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Client Name</th>
+            <th>Quantity (Kg)</th>
+            <th>Price / Kg</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @item.Date.ToString("g")
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ClientName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.QuantityKg)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.PricePerKg)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Total)
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

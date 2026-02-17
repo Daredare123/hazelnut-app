@@ -1,0 +1,54 @@
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h1 class="display-4">Dashboard</h1>
+            <p class="lead">Welcome, @User.Identity?.Name! Manage your business below.</p>
+        </div>
+    </div>
+
+    <div class="row text-center">
+        <!-- Manage Sales Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Manage Sales</h5>
+                    <p class="card-text">View and add new sales records.</p>
+                    <a asp-controller="Sales" asp-action="Index" class="btn btn-primary mt-auto">Go to Sales</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manage Expenses Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Manage Expenses</h5>
+                    <p class="card-text">Track and control your expenses.</p>
+                    <a asp-controller="Expenses" asp-action="Index" class="btn btn-warning mt-auto text-white">Go to Expenses</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clients Card -->
+        <div class="col-md-4 mb-4">
+             <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Clients</h5>
+                    <p class="card-text">Manage your client database.</p>
+                    <a href="#" class="btn btn-secondary mt-auto">Coming Soon</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Button -->
+    <div class="row mt-5">
+        <div class="col-12 text-center">
+            <a asp-controller="Account" asp-action="Logout" class="btn btn-danger btn-lg">Logout</a>
+        </div>
+    </div>
+</div>

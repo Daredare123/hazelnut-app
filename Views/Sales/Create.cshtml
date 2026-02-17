@@ -1,0 +1,36 @@
+@model HazelnutVeb.Models.Sale
+
+@{
+    ViewData["Title"] = "Create Sale";
+}
+
+<h1>Create Sale</h1>
+
+<h4>Sale</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div class="form-group">
+                <label asp-for="ClientName" class="control-label">Client Name</label>
+                <input asp-for="ClientName" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label asp-for="QuantityKg" class="control-label">Quantity (Kg)</label>
+                <input asp-for="QuantityKg" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label asp-for="PricePerKg" class="control-label">Price per Kg</label>
+                <input asp-for="PricePerKg" class="form-control" />
+            </div>
+            <div class="form-group mt-3">
+                <input type="submit" value="Create" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
