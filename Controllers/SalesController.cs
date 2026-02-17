@@ -1,41 +1,74 @@
-using Microsoft.AspNetCore.Mvc;
-using HazelnutVeb.Models;
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using HazelnutVeb.Data;
+using HazelnutVeb.Models;
 
 namespace HazelnutVeb.Controllers
 {
+    [Authorize]
     public class SalesController : Controller
     {
-        // In-memory storage as requested
-        private static List<Sale> _sales = new List<Sale>();
+        private readonly AppDbContext _context;
 
-        public IActionResult Index()
+        public SalesController(AppDbContext context)
         {
-            return View(_sales);
+            _context = context;
+        }
+
+        public async Task<IActionResult> Index()
+        {
+            return View(await _context.Sales.ToListAsync());
         }
 
         public IActionResult Create()
         {
-            return View();
+            return View(new Sale { Date = DateTime.Now });
         }
 
         [HttpPost]
-        public IActionResult Create(Sale sale)
+        public async Task<IActionResult> Create(Sale sale)
         {
-            // Simple ID generation
-            sale.Id = _sales.Any() ? _sales.Max(s => s.Id) + 1 : 1;
-            
-            // Auto-set Date
-            sale.Date = DateTime.Now;
+            // Fetch Inventory (create if not exists, but should exist from Program.cs)
+            var inventory = await _context.Inventory.FirstOrDefaultAsync();
+            if (inventory == null)
+            {
+                inventory = new Inventory { TotalKg = 0 };
+                _context.Inventory.Add(inventory);
+                await _context.SaveChangesAsync();
+            }
 
-            // Auto-calculate Total
+            // Inventory Validation
+            if (sale.QuantityKg > inventory.TotalKg)
+            {
+                ModelState.AddModelError("QuantityKg", $"Not enough inventory. Current stock: {inventory.TotalKg:N2} kg");
+                return View(sale);
+            }
+
+            // Calculate Total if client didn't send it or recalculate for safety
             sale.Total = sale.QuantityKg * sale.PricePerKg;
 
-            _sales.Add(sale);
+            // Ensure Date is valid
+            if (sale.Date == DateTime.MinValue)
+            {
+                sale.Date = DateTime.Now;
+            }
+
+            // Add Sale
+            _context.Sales.Add(sale);
+            
+            // Update Inventory
+            inventory.TotalKg -= sale.QuantityKg;
+            _context.Update(inventory);
+            
+            await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
         }
+
+        // Keep simplified delete/details actions if needed, or stick to Index/Create as requested
     }
 }

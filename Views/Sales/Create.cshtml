@@ -4,33 +4,88 @@
     ViewData["Title"] = "Create Sale";
 }
 
-<h1>Create Sale</h1>
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Add New Sale</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-<h4>Sale</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div class="form-group">
-                <label asp-for="ClientName" class="control-label">Client Name</label>
-                <input asp-for="ClientName" class="form-control" />
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Date" class="form-label fw-bold">Date</label>
+                                <input asp-for="Date" type="date" class="form-control" />
+                                <span asp-validation-for="Date" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="ClientName" class="form-label fw-bold">Client Name</label>
+                                <input asp-for="ClientName" class="form-control" placeholder="Enter client name" />
+                                <span asp-validation-for="ClientName" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="QuantityKg" class="form-label fw-bold">Quantity (Kg)</label>
+                                <input asp-for="QuantityKg" type="number" step="0.01" class="form-control" id="QuantityKg" placeholder="0.00" />
+                                <span asp-validation-for="QuantityKg" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="PricePerKg" class="form-label fw-bold">Price per Kg ($)</label>
+                                <input asp-for="PricePerKg" type="number" step="0.01" class="form-control" id="PricePerKg" placeholder="0.00" />
+                                <span asp-validation-for="PricePerKg" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Total" class="form-label fw-bold">Total ($)</label>
+                            <input asp-for="Total" class="form-control bg-light" id="Total" readonly />
+                            <span asp-validation-for="Total" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Save Sale</button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="QuantityKg" class="control-label">Quantity (Kg)</label>
-                <input asp-for="QuantityKg" class="form-control" />
-            </div>
-            <div class="form-group">
-                <label asp-for="PricePerKg" class="control-label">Price per Kg</label>
-                <input asp-for="PricePerKg" class="form-control" />
-            </div>
-            <div class="form-group mt-3">
-                <input type="submit" value="Create" class="btn btn-primary" />
-                <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const quantityInput = document.getElementById("QuantityKg");
+            const priceInput = document.getElementById("PricePerKg");
+            const totalInput = document.getElementById("Total");
+
+            function calculateTotal() {
+                // Parse values as floats, defaulting to 0 if NaN
+                const qty = parseFloat(quantityInput.value) || 0;
+                const price = parseFloat(priceInput.value) || 0;
+                
+                // Calculate total
+                const total = qty * price;
+                
+                // Update Total field with 2 decimal places
+                // Note: Since this is an input field, we use .value
+                totalInput.value = total.toFixed(2);
+            }
+
+            // Add event listeners for real-time updates
+            quantityInput.addEventListener("input", calculateTotal);
+            priceInput.addEventListener("input", calculateTotal);
+            
+            // Run calculation once on load to handle initial values (e.g. 0.00)
+            calculateTotal();
+        });
+    </script>
 }

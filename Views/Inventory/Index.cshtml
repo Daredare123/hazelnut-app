@@ -1,0 +1,28 @@
+@model HazelnutVeb.Models.Inventory
+
+@{
+    ViewData["Title"] = "Inventory Management";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <h3 class="mb-0">Current Inventory</h3>
+        </div>
+        <div class="card-body text-center">
+            <h1 class="display-1 fw-bold text-primary">@Model.TotalKg.ToString("N2") <small class="text-muted fs-4">kg</small></h1>
+            
+            @if (Model.TotalKg <= 5)
+            {
+                <div class="alert alert-danger mt-3 fw-bold">
+                    <i class="bi bi-exclamation-triangle-fill"></i> LOW STOCK WARNING (5kg or less)
+                </div>
+            }
+
+            <div class="mt-4">
+                <a asp-action="Update" class="btn btn-warning btn-lg px-5">Update Stock</a>
+                <a asp-controller="Home" asp-action="Dashboard" class="btn btn-secondary btn-lg px-5">Back to Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using HazelnutVeb.Data;
 using Microsoft.Extensions.Logging;
+using HazelnutVeb.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add connection string and services
@@ -24,26 +25,28 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Ensure database is created and migrated
+// Ensure database is created and initialized
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
         var context = services.GetRequiredService<HazelnutVeb.Data.AppDbContext>();
-        context.Database.EnsureCreated(); // Simple creation without migrations for now if simpler
-        // Or migrate: context.Database.Migrate(); 
-        // Just EnsureCreated is often enough for simple SQLite dev if no migrations exist yet.
-        // But user asked for "Enable migrations".
-        // Use Migrate() after creating a migration.
-        // I will use context.Database.Migrate(); later but for now let's leave it as Migrate().
-        // Actually, if I use Migrate(), I must have a migration. I will create one.
-        // For runtime safety, allow Migrate to run if possible.
+        
+        // Automatically create database if it does not exist
+        context.Database.EnsureCreated();
+
+        // Seed Inventory if empty
+        if (!context.Inventory.Any())
+        {
+            context.Inventory.Add(new Inventory { TotalKg = 0 });
+            context.SaveChanges();
+        }
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred creating the DB.");
+        logger.LogError(ex, "An error occurred creating/initializing the DB.");
     }
 }
 

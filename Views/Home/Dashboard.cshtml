@@ -10,6 +10,124 @@
         </div>
     </div>
 
+    <!-- Inventory Section -->
+    <div class="row mb-4 justify-content-center">
+        <div class="col-md-6">
+            @{
+                double stock = ViewBag.CurrentStock;
+                bool lowStock = stock <= 5;
+                string cardClass = lowStock ? "bg-warning" : "bg-dark";
+                string textClass = "text-white";
+            }
+            <div class="card @cardClass @textClass shadow-sm text-center">
+                <div class="card-body">
+                    <h3 class="card-title">Current Inventory</h3>
+                    <p class="display-4 font-weight-bold">@stock.ToString("N0") kg</p>
+                    @if (lowStock)
+                    {
+                        <div class="alert alert-danger mt-2 mb-0 fw-bold">
+                            <i class="bi bi-exclamation-triangle-fill"></i> LOW STOCK WARNING (5kg or less)
+                        </div>
+                    }
+                    else
+                    {
+                         <p class="card-text">Hazelnuts in stock</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Overview Section -->
+    <div class="row mb-5">
+        <h2 class="h4 mb-3 text-secondary border-bottom pb-2">Financial Overview</h2>
+        <div class="col-md-4">
+            <div class="card bg-success text-white shadow-sm mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Revenue</h5>
+                    <p class="card-text display-6">@ViewBag.TotalSales.ToString("C")</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-danger text-white shadow-sm mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Expenses</h5>
+                    <p class="card-text display-6">@ViewBag.TotalExpenses.ToString("C")</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            @{
+                double profit = ViewBag.TotalProfit;
+                string profitClass = profit >= 0 ? "text-success" : "text-danger";
+            }
+            <div class="card border-secondary shadow-sm mb-3">
+                <div class="card-body">
+                    <h5 class="card-title text-secondary">Net Profit</h5>
+                    <p class="card-text display-6 @profitClass">@profit.ToString("C")</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Section -->
+    <div class="row mb-5">
+        <div class="col-md-4">
+            <div class="card bg-success text-white shadow-sm mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Sales Amount</h5>
+                    <p class="card-text display-6">@ViewBag.TotalSalesAmount.ToString("C")</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white shadow-sm mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Kg Sold</h5>
+                    <p class="card-text display-6">@ViewBag.TotalQuantityKg.ToString("N2") kg</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-primary text-white shadow-sm mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Number of Sales</h5>
+                    <p class="card-text display-6">@ViewBag.SalesCount</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Performance Section -->
+    <div class="row mb-5">
+        <h2 class="h4 mb-3 text-secondary border-bottom pb-2">Monthly Performance (@DateTime.Now.ToString("MMMM yyyy"))</h2>
+        <div class="col-md-4">
+            <div class="card bg-light border-success shadow-sm mb-3">
+                <div class="card-body">
+                    <h5 class="card-title text-success">This Month Revenue</h5>
+                    <p class="card-text h3">@ViewBag.MonthlyAmount.ToString("C")</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-light border-info shadow-sm mb-3">
+                <div class="card-body">
+                    <h5 class="card-title text-info">This Month Kg Sold</h5>
+                    <p class="card-text h3">@ViewBag.MonthlyKg.ToString("N2") kg</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-light border-primary shadow-sm mb-3">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">This Month Number of Sales</h5>
+                    <p class="card-text h3">@ViewBag.MonthlyCount</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row text-center">
         <!-- Manage Sales Card -->
         <div class="col-md-4 mb-4">

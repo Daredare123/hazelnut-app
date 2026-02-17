@@ -13,6 +13,7 @@ namespace HazelnutVeb.Data
         public DbSet<Client> Clients { get; set; }
         public DbSet<Sale> Sales { get; set; }
         public DbSet<Expense> Expenses { get; set; }
+        public DbSet<Inventory> Inventory { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
