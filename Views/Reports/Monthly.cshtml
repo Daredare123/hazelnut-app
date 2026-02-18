@@ -5,106 +5,124 @@
     var currentYear = DateTime.Now.Year;
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="display-5">Monthly Report</h1>
-        <a asp-controller="Home" asp-action="Dashboard" class="btn btn-outline-secondary">Back to Dashboard</a>
+<div class="row align-items-center mb-4">
+    <div class="col-md-6">
+        <h2 class="fw-bold mb-0 text-dark"><i class="bi bi-file-earmark-bar-graph me-2 text-primary"></i>Monthly Report</h2>
+        <p class="text-muted small mb-0">Performance analysis for @System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(Model.Month) @Model.Year</p>
     </div>
+    <div class="col-md-6 text-md-end mt-3 mt-md-0">
+        <a asp-controller="Home" asp-action="Dashboard" class="btn btn-outline-secondary d-inline-flex align-items-center shadow-sm">
+            <i class="bi bi-arrow-left me-2"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
 
-    <!-- Filter Form -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-light">
-            <h5 class="mb-0">Generate Report</h5>
-        </div>
-        <div class="card-body">
-            <form asp-action="Monthly" method="get" class="row g-3 align-items-end">
-                <div class="col-md-4">
-                    <label for="month" class="form-label fw-bold">Select Month</label>
-                    <select name="month" id="month" class="form-select">
-                        @for (int i = 1; i <= 12; i++)
-                        {
-                            if (Model.Month == i)
+<div class="row">
+    <!-- Filter Sidebar -->
+    <div class="col-lg-3 mb-4 mb-lg-0">
+        <div class="card shadow-sm border-0 rounded-4 sticky-top" style="top: 20px; z-index: 10;">
+             <div class="card-header bg-light border-0 py-3 rounded-top-4">
+                <h6 class="mb-0 fw-bold text-uppercase small text-secondary">Filter Options</h6>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="Monthly" method="get">
+                    <div class="mb-3">
+                        <label for="month" class="form-label text-secondary fw-bold text-uppercase small">Select Month</label>
+                        <select name="month" id="month" class="form-select border-0 bg-light fw-bold">
+                            @for (int i = 1; i <= 12; i++)
                             {
-                                <option value="@i" selected>@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(i)</option>
+                                if (Model.Month == i)
+                                {
+                                    <option value="@i" selected>@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(i)</option>
+                                }
+                                else
+                                {
+                                    <option value="@i">@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(i)</option>
+                                }
                             }
-                            else
-                            {
-                                <option value="@i">@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(i)</option>
-                            }
-                        }
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label for="year" class="form-label fw-bold">Select Year</label>
-                    <select name="year" id="year" class="form-select">
-                        <option value="@currentYear" selected="@(Model.Year == currentYear)">@currentYear</option>
-                        <option value="@(currentYear - 1)" selected="@(Model.Year == currentYear - 1)">@(currentYear - 1)</option>
-                        <option value="@(currentYear - 2)" selected="@(Model.Year == currentYear - 2)">@(currentYear - 2)</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <button type="submit" class="btn btn-primary w-100">View Report</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Report Results -->
-    <h3 class="mb-3 text-secondary">Results for @System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(Model.Month) @Model.Year</h3>
-    
-    <div class="row">
-        <!-- Totals Row -->
-        <div class="col-md-4 mb-3">
-            <div class="card bg-success text-white h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Total Sales</h5>
-                    <p class="display-6 fw-bold">@Model.TotalSales.ToString("C")</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <div class="card bg-danger text-white h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Total Expenses</h5>
-                    <p class="display-6 fw-bold">@Model.TotalExpenses.ToString("C")</p>
-                </div>
-            </div>
-        </div>
-        @{
-            var profitClass = Model.Profit >= 0 ? "text-success" : "text-danger";
-            var cardBorderClass = Model.Profit >= 0 ? "border-success" : "border-danger";
-        }
-        <div class="col-md-4 mb-3">
-            <div class="card @cardBorderClass bg-light h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <h5 class="card-title text-secondary">Net Profit</h5>
-                    <p class="display-6 fw-bold @profitClass">@Model.Profit.ToString("C")</p>
-                </div>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label for="year" class="form-label text-secondary fw-bold text-uppercase small">Select Year</label>
+                        <select name="year" id="year" class="form-select border-0 bg-light fw-bold">
+                            <option value="@currentYear" selected="@(Model.Year == currentYear)">@currentYear</option>
+                            <option value="@(currentYear - 1)" selected="@(Model.Year == currentYear - 1)">@(currentYear - 1)</option>
+                            <option value="@(currentYear - 2)" selected="@(Model.Year == currentYear - 2)">@(currentYear - 2)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 shadow fw-bold text-uppercase"><i class="bi bi-funnel me-2"></i>Generate Report</button>
+                </form>
             </div>
         </div>
     </div>
 
-    <div class="row mt-2">
-        <!-- Metrics Row -->
-        <div class="col-md-6 mb-3">
-            <div class="card border-info h-100 shadow-sm">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="card-title text-info mb-0">Total Quantity Sold</h5>
-                        <small class="text-muted">Total weight in Kg</small>
+    <!-- Report Content -->
+    <div class="col-lg-9">
+         <!-- Financial Cards -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                 <div class="card bg-success text-white shadow border-0 rounded-4 h-100 position-relative overflow-hidden">
+                     <i class="bi bi-cash position-absolute top-0 end-0 p-3 opacity-25 fs-1"></i>
+                     <div class="card-body p-4">
+                        <h6 class="text-uppercase opacity-75 small fw-bold mb-2">Total Sales</h6>
+                        <h3 class="mb-0 fw-bold">@Model.TotalSales.ToString("N2") ден</h3>
                     </div>
-                    <p class="h2 text-info mb-0">@Model.TotalKg.ToString("N2") <span class="fs-5">kg</span></p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card bg-danger text-white shadow border-0 rounded-4 h-100 position-relative overflow-hidden">
+                    <i class="bi bi-credit-card position-absolute top-0 end-0 p-3 opacity-25 fs-1"></i>
+                    <div class="card-body p-4">
+                        <h6 class="text-uppercase opacity-75 small fw-bold mb-2">Total Expenses</h6>
+                        <h3 class="mb-0 fw-bold">@Model.TotalExpenses.ToString("N2") ден</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                 @{
+                    var profitClass = Model.Profit >= 0 ? "text-success" : "text-danger";
+                    var profitBg = Model.Profit >= 0 ? "bg-success" : "bg-danger";
+                }
+                <div class="card bg-white shadow border-0 rounded-4 h-100 position-relative overflow-hidden">
+                    <div class="card-body p-4">
+                         <div class="d-flex align-items-center justify-content-between mb-2">
+                            <h6 class="text-uppercase text-secondary opacity-75 small fw-bold mb-0">Net Profit</h6>
+                             <span class="badge @profitBg bg-opacity-10 text-dark rounded-pill px-2 py-1 small fw-bold">
+                                 @if(Model.Profit >= 0) { <i class="bi bi-arrow-up-right text-success me-1"></i> } else { <i class="bi bi-arrow-down-right text-danger me-1"></i> }
+                             </span>
+                        </div>
+                        <h3 class="mb-0 fw-bold @profitClass">@Model.Profit.ToString("N2") ден</h3>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6 mb-3">
-            <div class="card border-primary h-100 shadow-sm">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="card-title text-primary mb-0">Total Transactions</h5>
-                        <small class="text-muted">Count of sales</small>
+
+        <!-- Metric Cards -->
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="card shadow-sm border-0 rounded-4 h-100">
+                    <div class="card-body p-4 d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-info bg-opacity-10 p-3 rounded-circle me-3">
+                            <i class="bi bi-box-seam text-info fs-3"></i>
+                        </div>
+                        <div>
+                             <h6 class="text-secondary text-uppercase opacity-75 small fw-bold mb-1">Total Quantity Sold</h6>
+                             <h4 class="mb-0 fw-bold text-dark">@Model.TotalKg.ToString("N2") <span class="fs-6 text-muted">kg</span></h4>
+                        </div>
                     </div>
-                    <p class="h2 text-primary mb-0">@Model.TotalTransactions</p>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                 <div class="card shadow-sm border-0 rounded-4 h-100">
+                    <div class="card-body p-4 d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                            <i class="bi bi-receipt text-primary fs-3"></i>
+                        </div>
+                        <div>
+                             <h6 class="text-secondary text-uppercase opacity-75 small fw-bold mb-1">Total Transactions</h6>
+                             <h4 class="mb-0 fw-bold text-dark">@Model.TotalTransactions</h4>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
