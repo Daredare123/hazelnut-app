@@ -16,6 +16,8 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <Content Remove="wwwroot\manifest.json" />
+    <Content Remove="wwwroot\service-worker.js" />
   </ItemGroup>
 
 </Project>
