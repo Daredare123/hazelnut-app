@@ -14,6 +14,7 @@ builder.Services.AddDbContext<HazelnutVeb.Data.AppDbContext>(options =>
 
 // Add controllers with views
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<HazelnutVeb.Services.NotificationService>();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>

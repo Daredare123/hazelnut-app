@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using HazelnutVeb.Data;
 using HazelnutVeb.Models;
+using HazelnutVeb.Services;
 
 namespace HazelnutVeb.Controllers
 {
@@ -13,10 +14,12 @@ namespace HazelnutVeb.Controllers
     public class SalesController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly NotificationService _notificationService;
 
-        public SalesController(AppDbContext context)
+        public SalesController(AppDbContext context, NotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;
         }
 
         public async Task<IActionResult> Index()
@@ -65,6 +68,11 @@ namespace HazelnutVeb.Controllers
             _context.Update(inventory);
             
             await _context.SaveChangesAsync();
+
+            if (inventory.TotalKg <= 5)
+            {
+                await _notificationService.SendLowInventoryNotification(inventory.TotalKg);
+            }
 
             return RedirectToAction(nameof(Index));
         }
