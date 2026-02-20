@@ -47,5 +47,55 @@ namespace HazelnutVeb.Controllers
 
             return View(model);
         }
+
+        public async Task<IActionResult> Yearly(int year)
+        {
+            if (year == 0)
+            {
+                year = DateTime.Now.Year;
+            }
+
+            var sales = await _context.Sales
+                .Where(s => s.Date.Year == year)
+                .ToListAsync();
+
+            var model = new YearlyReportViewModel
+            {
+                Year = year,
+                TotalRevenue = sales.Sum(s => s.QuantityKg * s.PricePerKg),
+                TotalQuantity = sales.Sum(s => s.QuantityKg),
+                TotalSalesCount = sales.Count
+            };
+
+            return View(model);
+        }
+
+        public async Task<IActionResult> DateRange(DateTime? startDate, DateTime? endDate)
+        {
+            var query = _context.Sales.AsQueryable();
+
+            if (startDate.HasValue)
+            {
+                query = query.Where(s => s.Date >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                query = query.Where(s => s.Date <= endDate.Value);
+            }
+
+            var sales = await query.ToListAsync();
+
+            var model = new DateRangeReportViewModel
+            {
+                StartDate = startDate,
+                EndDate = endDate,
+                TotalRevenue = sales.Sum(s => s.QuantityKg * s.PricePerKg),
+                TotalQuantity = sales.Sum(s => s.QuantityKg),
+                TotalSalesCount = sales.Count
+            };
+
+            return View(model);
+        }
     }
 }

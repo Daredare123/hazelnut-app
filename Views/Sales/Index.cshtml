@@ -25,14 +25,15 @@
                         <th class="py-3 text-secondary text-uppercase small fw-bold border-0">Client Name</th>
                         <th class="py-3 text-secondary text-uppercase small fw-bold border-0 text-end">Quantity (Kg)</th>
                         <th class="py-3 text-secondary text-uppercase small fw-bold border-0 text-end">Price / Kg</th>
-                        <th class="pe-4 py-3 text-secondary text-uppercase small fw-bold border-0 text-end">Total</th>
+                        <th class="py-3 text-secondary text-uppercase small fw-bold border-0 text-end">Total</th>
+                        <th class="pe-4 py-3 text-secondary text-uppercase small fw-bold border-0 text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @if (!Model.Any())
                     {
                         <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">
+                            <td colspan="6" class="text-center py-5 text-muted">
                                 <i class="bi bi-inbox fs-1 d-block mb-3 opacity-25"></i>
                                 No sales records found.
                             </td>
@@ -55,8 +56,17 @@
                                 <td class="text-end font-monospace">
                                     @item.PricePerKg.ToString("N2")
                                 </td>
-                                <td class="pe-4 text-end fw-bold text-success font-monospace">
+                                <td class="text-end fw-bold text-success font-monospace">
                                     @item.Total.ToString("N2") ден
+                                </td>
+                                <td class="pe-4 text-end">
+                                    <form asp-action="Delete" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill shadow-sm py-1 px-3"
+                                            onclick="return confirm('Are you sure you want to delete this sale? This will revert the inventory.')">
+                                            <i class="bi bi-trash me-1"></i> Delete
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                         }

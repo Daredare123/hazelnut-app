@@ -14,6 +14,7 @@ namespace HazelnutVeb.Data
         public DbSet<Sale> Sales { get; set; }
         public DbSet<Expense> Expenses { get; set; }
         public DbSet<Inventory> Inventory { get; set; }
+        public DbSet<Reservation> Reservations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -77,6 +77,25 @@ namespace HazelnutVeb.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // Keep simplified delete/details actions if needed, or stick to Index/Create as requested
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var sale = await _context.Sales.FindAsync(id);
+            if (sale != null)
+            {
+                var inventory = await _context.Inventory.FirstOrDefaultAsync();
+                if (inventory != null)
+                {
+                    // Revert the inventory
+                    inventory.TotalKg += sale.QuantityKg;
+                    _context.Update(inventory);
+                }
+                
+                _context.Sales.Remove(sale);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
     }
 }

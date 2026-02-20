@@ -23,7 +23,18 @@ namespace HazelnutVeb.Controllers
         // GET: Clients
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Clients.ToListAsync());
+            var clients = await _context.Clients
+                .Select(c => new ClientListViewModel
+                {
+                    Id = c.Id,
+                    Name = c.Name,
+                    TotalQuantity = c.Sales != null ? c.Sales.Sum(s => s.QuantityKg) : 0,
+                    TotalRevenue = c.Sales != null ? c.Sales.Sum(s => s.QuantityKg * s.PricePerKg) : 0,
+                    TotalSalesCount = c.Sales != null ? c.Sales.Count : 0
+                })
+                .ToListAsync();
+
+            return View(clients);
         }
 
         // GET: Clients/Details/5
@@ -113,6 +124,40 @@ namespace HazelnutVeb.Controllers
         private bool ClientExists(int id)
         {
             return _context.Clients.Any(e => e.Id == id);
+        }
+
+        // GET: Clients/Report
+        public async Task<IActionResult> Report(int clientId, DateTime? startDate, DateTime? endDate)
+        {
+            var client = await _context.Clients.FindAsync(clientId);
+            if (client == null) return NotFound();
+
+            var query = _context.Entry(client).Collection(c => c.Sales!).Query();
+
+            if (startDate.HasValue)
+            {
+                query = query.Where(s => s.Date >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                query = query.Where(s => s.Date <= endDate.Value);
+            }
+
+            var sales = await query.ToListAsync();
+
+            var model = new ClientReportViewModel
+            {
+                ClientId = clientId,
+                ClientName = client.Name,
+                StartDate = startDate,
+                EndDate = endDate,
+                TotalQuantity = sales.Sum(s => s.QuantityKg),
+                TotalRevenue = sales.Sum(s => s.QuantityKg * s.PricePerKg),
+                TotalSalesCount = sales.Count
+            };
+
+            return View(model);
         }
     }
 }
