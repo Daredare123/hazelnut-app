@@ -6,11 +6,10 @@ using HazelnutVeb.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add connection string and services
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? "Data Source=hazelnut.db";
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<HazelnutVeb.Data.AppDbContext>(options =>
-    options.UseSqlite(connectionString));
+    options.UseNpgsql(connectionString));
 
 // Add controllers with views
 builder.Services.AddControllersWithViews();
