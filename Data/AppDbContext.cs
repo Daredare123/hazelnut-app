@@ -19,7 +19,13 @@ namespace HazelnutVeb.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            // Additional configuration if needed
+            
+            // Explicitly match case for PostgreSQL tables
+            modelBuilder.Entity<Client>().ToTable("Clients");
+            modelBuilder.Entity<Sale>().ToTable("Sales");
+            modelBuilder.Entity<Expense>().ToTable("Expenses");
+            modelBuilder.Entity<Inventory>().ToTable("Inventory");
+            modelBuilder.Entity<Reservation>().ToTable("Reservations");
         }
     }
 }

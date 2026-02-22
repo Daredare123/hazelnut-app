@@ -1,4 +1,3 @@
-C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\HazelnutVeb.csproj.AssemblyReference.cache
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\appsettings.Development.json
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\appsettings.json
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\appsettings.json.json
@@ -9,6 +8,8 @@ C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\HazelnutVe
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\HazelnutVeb.runtimeconfig.json
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\HazelnutVeb.dll
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\HazelnutVeb.pdb
+C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\en\HazelnutVeb.resources.dll
+C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\mk\HazelnutVeb.resources.dll
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\Humanizer.dll
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\Microsoft.Build.Framework.dll
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\Microsoft.CodeAnalysis.dll
@@ -25,6 +26,8 @@ C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\Microsoft.
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\Microsoft.VisualStudio.SolutionPersistence.dll
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\Mono.TextTemplating.dll
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\Newtonsoft.Json.dll
+C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\Npgsql.dll
+C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\System.CodeDom.dll
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\System.Composition.AttributedModel.dll
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\System.Composition.Convention.dll
@@ -96,7 +99,11 @@ C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\ru\Microso
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\tr\Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\zh-Hans\Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\zh-Hant\Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
+C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\HazelnutVeb.csproj.AssemblyReference.cache
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\rpswa.dswa.cache.json
+C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\HazelnutVeb.Resources.SharedResource.en.resources
+C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\HazelnutVeb.Resources.SharedResource.mk.resources
+C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\HazelnutVeb.csproj.GenerateResource.cache
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\HazelnutVeb.GeneratedMSBuildEditorConfig.editorconfig
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\HazelnutVeb.AssemblyInfoInputs.cache
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\HazelnutVeb.AssemblyInfo.cs
@@ -105,6 +112,10 @@ C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\HazelnutVe
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\HazelnutVeb.RazorAssemblyInfo.cache
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\HazelnutVeb.RazorAssemblyInfo.cs
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\HazelnutVeb.sourcelink.json
+C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\en\HazelnutVeb.resources.cs
+C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\en\HazelnutVeb.resources.dll
+C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\mk\HazelnutVeb.resources.cs
+C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\mk\HazelnutVeb.resources.dll
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\rjimswa.dswa.cache.json
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\rjsmrazor.dswa.cache.json
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\rjsmcshtml.dswa.cache.json
@@ -188,5 +199,3 @@ C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\refint\Haz
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\HazelnutVeb.pdb
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\HazelnutVeb.genruntimeconfig.cache
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\ref\HazelnutVeb.dll
-C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\Npgsql.dll
-C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll

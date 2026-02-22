@@ -35,20 +35,27 @@ namespace HazelnutVeb.Controllers
         public async Task<IActionResult> Dashboard()
         {
             // Fetch everything asynchronously
-            var sales = await _context.Sales.ToListAsync();
-            var expenses = await _context.Expenses.ToListAsync();
+            var sales = await _context.Sales.ToListAsync() ?? new List<Sale>();
+            var expenses = await _context.Expenses.ToListAsync() ?? new List<Expense>();
             var inventory = await _context.Inventory.FirstOrDefaultAsync();
 
-            double stock = inventory?.TotalKg ?? 0;
+            if (inventory == null)
+            {
+                inventory = new Inventory { TotalKg = 0 };
+                _context.Inventory.Add(inventory);
+                await _context.SaveChangesAsync();
+            }
+
+            double stock = inventory.TotalKg;
 
             // Totals
-            ViewBag.TotalSalesAmount = sales.Sum(s => s.Total);
-            ViewBag.TotalQuantityKg = sales.Sum(s => s.QuantityKg);
+            ViewBag.TotalSalesAmount = sales.Any() ? sales.Sum(s => s.Total) : 0;
+            ViewBag.TotalQuantityKg = sales.Any() ? sales.Sum(s => s.QuantityKg) : 0;
             ViewBag.SalesCount = sales.Count;
 
             // Financial
-            var totalRevenue = sales.Sum(s => s.Total);
-            var totalCosts = expenses.Sum(e => e.Amount);
+            var totalRevenue = sales.Any() ? sales.Sum(s => s.Total) : 0;
+            var totalCosts = expenses.Any() ? expenses.Sum(e => e.Amount) : 0;
             var totalProfit = totalRevenue - totalCosts;
 
             ViewBag.TotalSales = totalRevenue;
@@ -56,15 +63,16 @@ namespace HazelnutVeb.Controllers
             ViewBag.TotalProfit = totalProfit;
 
             // Monthly
-            var currentMonth = DateTime.Now.Month;
-            var currentYear = DateTime.Now.Year;
+            DateTime start = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+            DateTime end = start.AddMonths(1).AddDays(-1);
 
+            // Using end.AddDays(1) or handling time safely without .Date.Month
             var monthlySales = sales
-                .Where(s => s.Date.Month == currentMonth && s.Date.Year == currentYear)
+                .Where(s => s.Date >= start && s.Date < end.AddDays(1))
                 .ToList();
 
-            ViewBag.MonthlyAmount = monthlySales.Sum(s => s.Total);
-            ViewBag.MonthlyKg = monthlySales.Sum(s => s.QuantityKg);
+            ViewBag.MonthlyAmount = monthlySales.Any() ? monthlySales.Sum(s => s.Total) : 0;
+            ViewBag.MonthlyKg = monthlySales.Any() ? monthlySales.Sum(s => s.QuantityKg) : 0;
             ViewBag.MonthlyCount = monthlySales.Count;
 
             // Inventory

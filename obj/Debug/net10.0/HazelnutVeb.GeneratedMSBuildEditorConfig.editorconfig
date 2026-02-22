@@ -169,3 +169,11 @@ build_metadata.AdditionalFiles.CssScope =
 [C:/Users/Dell_User/Desktop/hazelnut veb/HazelnutVeb/Views/Shared/_Layout.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = b-165f9cb5jo
+
+[C:/Users/Dell_User/Desktop/hazelnut veb/HazelnutVeb/Resources/SharedResource.en.resx]
+build_metadata.AdditionalFiles.TargetPath = Resources\SharedResource.en.resx
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Dell_User/Desktop/hazelnut veb/HazelnutVeb/Resources/SharedResource.mk.resx]
+build_metadata.AdditionalFiles.TargetPath = Resources\SharedResource.mk.resx
+build_metadata.AdditionalFiles.CssScope = 

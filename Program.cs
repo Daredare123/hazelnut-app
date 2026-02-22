@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using HazelnutVeb.Data;
 using Microsoft.Extensions.Logging;
 using HazelnutVeb.Models;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc.Razor;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add connection string and services
@@ -12,7 +15,11 @@ builder.Services.AddDbContext<HazelnutVeb.Data.AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 // Add controllers with views
-builder.Services.AddControllersWithViews();
+builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+
+builder.Services.AddControllersWithViews()
+    .AddViewLocalization()
+    .AddDataAnnotationsLocalization();
 builder.Services.AddScoped<HazelnutVeb.Services.NotificationService>();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -25,6 +32,14 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+var supportedCultures = new[] { "mk", "en" };
+var localizationOptions = new RequestLocalizationOptions()
+    .SetDefaultCulture(supportedCultures[0])
+    .AddSupportedCultures(supportedCultures)
+    .AddSupportedUICultures(supportedCultures);
+
+app.UseRequestLocalization(localizationOptions);
+
 // Ensure database is created and initialized
 using (var scope = app.Services.CreateScope())
 {
@@ -33,7 +48,7 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<HazelnutVeb.Data.AppDbContext>();
         
-        // Automatically create database if it does not exist
+        // Automatically create schema/tables incrementally if they don't exist yet via EF native method
         context.Database.EnsureCreated();
 
         // Seed Inventory if empty

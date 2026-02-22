@@ -13,6 +13,14 @@
         },
         "runtime": {
           "HazelnutVeb.dll": {}
+        },
+        "resources": {
+          "en/HazelnutVeb.resources.dll": {
+            "locale": "en"
+          },
+          "mk/HazelnutVeb.resources.dll": {
+            "locale": "mk"
+          }
         }
       },
       "Humanizer.Core/2.14.1": {

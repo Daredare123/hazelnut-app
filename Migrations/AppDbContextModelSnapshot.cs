@@ -44,7 +44,7 @@ namespace HazelnutVeb.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Clients");
+                    b.ToTable("Clients", (string)null);
                 });
 
             modelBuilder.Entity("HazelnutVeb.Models.Expense", b =>
@@ -67,7 +67,7 @@ namespace HazelnutVeb.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Expenses");
+                    b.ToTable("Expenses", (string)null);
                 });
 
             modelBuilder.Entity("HazelnutVeb.Models.Inventory", b =>
@@ -83,7 +83,7 @@ namespace HazelnutVeb.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Inventory");
+                    b.ToTable("Inventory", (string)null);
                 });
 
             modelBuilder.Entity("HazelnutVeb.Models.Reservation", b =>
@@ -111,7 +111,7 @@ namespace HazelnutVeb.Migrations
 
                     b.HasIndex("ClientId");
 
-                    b.ToTable("Reservations");
+                    b.ToTable("Reservations", (string)null);
                 });
 
             modelBuilder.Entity("HazelnutVeb.Models.Sale", b =>
@@ -145,7 +145,7 @@ namespace HazelnutVeb.Migrations
 
                     b.HasIndex("ClientId");
 
-                    b.ToTable("Sales");
+                    b.ToTable("Sales", (string)null);
                 });
 
             modelBuilder.Entity("HazelnutVeb.Models.Reservation", b =>
