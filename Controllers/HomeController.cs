@@ -34,7 +34,7 @@ namespace HazelnutVeb.Controllers
 
         public async Task<IActionResult> Dashboard()
         {
-            // Fetch everything asynchronously
+            // Fetch everything asynchronously and safely
             var sales = await _context.Sales.ToListAsync() ?? new List<Sale>();
             var expenses = await _context.Expenses.ToListAsync() ?? new List<Expense>();
             var inventory = await _context.Inventory.FirstOrDefaultAsync();
@@ -66,7 +66,6 @@ namespace HazelnutVeb.Controllers
             DateTime start = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
             DateTime end = start.AddMonths(1).AddDays(-1);
 
-            // Using end.AddDays(1) or handling time safely without .Date.Month
             var monthlySales = sales
                 .Where(s => s.Date >= start && s.Date < end.AddDays(1))
                 .ToList();
