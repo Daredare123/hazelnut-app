@@ -35,46 +35,64 @@ namespace HazelnutVeb.Controllers
         public IActionResult Create()
         {
             ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name");
-            return View(new Reservation { Date = DateTime.Now });
+            return View(new Reservation { Date = DateTime.UtcNow });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("ClientId,Quantity,Date")] Reservation reservation)
         {
-            reservation.Status = "Reserved";
-
-            if (ModelState.IsValid)
+            try
             {
-                var inventory = await _context.Inventory.FirstOrDefaultAsync();
-                if (inventory == null)
+                reservation.Status = "Reserved";
+
+                // Ensure PostgreSQL DateTime strictly enforced dynamically to UTC without nullable errors
+                if (reservation.Date != DateTime.MinValue)
                 {
-                    inventory = new Inventory { TotalKg = 0 };
-                    _context.Inventory.Add(inventory);
+                    reservation.Date = DateTime.SpecifyKind(reservation.Date, DateTimeKind.Utc);
+                }
+                else 
+                {
+                    reservation.Date = DateTime.UtcNow;
+                }
+
+                if (ModelState.IsValid)
+                {
+                    var inventory = await _context.Inventory.FirstOrDefaultAsync();
+                    if (inventory == null)
+                    {
+                        inventory = new Inventory { TotalKg = 0 };
+                        _context.Inventory.Add(inventory);
+                        await _context.SaveChangesAsync();
+                    }
+
+                    if (reservation.Quantity > inventory.TotalKg)
+                    {
+                        ModelState.AddModelError("Quantity", $"Not enough inventory. Current stock: {inventory.TotalKg:N2} kg");
+                        ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name", reservation.ClientId);
+                        return View(reservation);
+                    }
+
+                    _context.Reservations.Add(reservation);
+                    
+                    inventory.TotalKg -= reservation.Quantity;
+                    _context.Update(inventory);
+                    
                     await _context.SaveChangesAsync();
+
+                    if (inventory.TotalKg <= 5)
+                    {
+                        await _notificationService.SendLowInventoryNotification(inventory.TotalKg);
+                    }
+
+                    return RedirectToAction(nameof(Index));
                 }
-
-                if (reservation.Quantity > inventory.TotalKg)
-                {
-                    ModelState.AddModelError("Quantity", $"Not enough inventory. Current stock: {inventory.TotalKg:N2} kg");
-                    ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name", reservation.ClientId);
-                    return View(reservation);
-                }
-
-                _context.Reservations.Add(reservation);
-                
-                inventory.TotalKg -= reservation.Quantity;
-                _context.Update(inventory);
-                
-                await _context.SaveChangesAsync();
-
-                if (inventory.TotalKg <= 5)
-                {
-                    await _notificationService.SendLowInventoryNotification(inventory.TotalKg);
-                }
-
-                return RedirectToAction(nameof(Index));
             }
+            catch (Exception)
+            {
+                ModelState.AddModelError("", "An error occurred while saving the reservation. Please verify your inputs.");
+            }
+
             ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name", reservation.ClientId);
             return View(reservation);
         }
