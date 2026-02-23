@@ -63,28 +63,45 @@ namespace HazelnutVeb.Controllers
         [HttpPost]
         public async Task<IActionResult> Update(Inventory inventory)
         {
+            if (!ModelState.IsValid)
+            {
+                return View(inventory);
+            }
+
             if (inventory.TotalKg < 0)
             {
                 ModelState.AddModelError("TotalKg", "Inventory cannot be negative.");
                 return View(inventory);
             }
 
-            var dbInventory = await _context.Inventory.FirstOrDefaultAsync();
-            if (dbInventory == null)
+            try
             {
-                dbInventory = new Inventory();
-                _context.Inventory.Add(dbInventory);
-            }
-            
-            dbInventory.TotalKg = inventory.TotalKg;
-            await _context.SaveChangesAsync();
+                var dbInventory = await _context.Inventory.FirstOrDefaultAsync();
+                if (dbInventory == null)
+                {
+                    dbInventory = new Inventory { TotalKg = inventory.TotalKg };
+                    _context.Inventory.Add(dbInventory);
+                }
+                else
+                {
+                    dbInventory.TotalKg = inventory.TotalKg;
+                    _context.Update(dbInventory);
+                }
+                
+                await _context.SaveChangesAsync();
 
-            if (dbInventory.TotalKg <= 5)
+                if (dbInventory.TotalKg <= 5)
+                {
+                    await _notificationService.SendLowInventoryNotification(dbInventory.TotalKg);
+                }
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception)
             {
-                await _notificationService.SendLowInventoryNotification(dbInventory.TotalKg);
+                ModelState.AddModelError("", "Database error occurred.");
+                return View(inventory);
             }
-
-            return RedirectToAction(nameof(Index));
         }
     }
 }

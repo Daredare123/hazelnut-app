@@ -49,13 +49,31 @@ namespace HazelnutVeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Date,Description,Amount")] Expense expense)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
+                return View(expense);
+            }
+
+            try
+            {
+                if (expense.Date != DateTime.MinValue)
+                {
+                    expense.Date = DateTime.SpecifyKind(expense.Date, DateTimeKind.Utc);
+                }
+                else
+                {
+                    expense.Date = DateTime.UtcNow;
+                }
+
                 _context.Add(expense);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(expense);
+            catch (Exception)
+            {
+                ModelState.AddModelError("", "Database error occurred.");
+                return View(expense);
+            }
         }
 
         public async Task<IActionResult> Edit(int? id)
@@ -72,21 +90,36 @@ namespace HazelnutVeb.Controllers
         {
             if (id != expense.Id) return NotFound();
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                try
+                return View(expense);
+            }
+
+            try
+            {
+                if (expense.Date != DateTime.MinValue)
                 {
-                    _context.Update(expense);
-                    await _context.SaveChangesAsync();
+                    expense.Date = DateTime.SpecifyKind(expense.Date, DateTimeKind.Utc);
                 }
-                catch (DbUpdateConcurrencyException)
+                else
                 {
-                    if (!ExpenseExists(expense.Id)) return NotFound();
-                    else throw;
+                    expense.Date = DateTime.UtcNow;
                 }
+
+                _context.Update(expense);
+                await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(expense);
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ExpenseExists(expense.Id)) return NotFound();
+                else throw;
+            }
+            catch (Exception)
+            {
+                ModelState.AddModelError("", "Database error occurred.");
+                return View(expense);
+            }
         }
 
         public async Task<IActionResult> Delete(int? id)
@@ -101,13 +134,20 @@ namespace HazelnutVeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var expense = await _context.Expenses.FindAsync(id);
-            if (expense != null)
+            try
             {
-                _context.Expenses.Remove(expense);
-                await _context.SaveChangesAsync();
+                var expense = await _context.Expenses.FirstOrDefaultAsync(e => e.Id == id);
+                if (expense != null)
+                {
+                    _context.Expenses.Remove(expense);
+                    await _context.SaveChangesAsync();
+                }
+                return RedirectToAction(nameof(Index));
             }
-            return RedirectToAction(nameof(Index));
+            catch (Exception)
+            {
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         private bool ExpenseExists(int id)
