@@ -69,9 +69,9 @@ namespace HazelnutVeb.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                ModelState.AddModelError("", "Database error occurred.");
+                ModelState.AddModelError("", ex.InnerException?.Message ?? ex.Message);
                 return View(expense);
             }
         }
@@ -115,9 +115,9 @@ namespace HazelnutVeb.Controllers
                 if (!ExpenseExists(expense.Id)) return NotFound();
                 else throw;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                ModelState.AddModelError("", "Database error occurred.");
+                ModelState.AddModelError("", ex.InnerException?.Message ?? ex.Message);
                 return View(expense);
             }
         }

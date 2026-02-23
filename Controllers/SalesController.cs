@@ -95,9 +95,9 @@ namespace HazelnutVeb.Controllers
 
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                ModelState.AddModelError("", "Database error occurred.");
+                ModelState.AddModelError("", ex.InnerException?.Message ?? ex.Message);
                 return View(sale);
             }
         }
