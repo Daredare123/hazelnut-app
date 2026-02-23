@@ -25,11 +25,18 @@ namespace HazelnutVeb.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var reservations = await _context.Reservations
-                .Include(r => r.Client)
-                .OrderByDescending(r => r.Date)
-                .ToListAsync();
-            return View(reservations);
+            try
+            {
+                var reservations = await _context.Reservations
+                    .Include(r => r.Client)
+                    .OrderByDescending(r => r.Date)
+                    .ToListAsync() ?? new List<Reservation>();
+                return View(reservations);
+            }
+            catch (Exception)
+            {
+                return View(new List<Reservation>());
+            }
         }
 
         public IActionResult Create()
@@ -100,57 +107,71 @@ namespace HazelnutVeb.Controllers
         [HttpPost]
         public async Task<IActionResult> Complete(int id, double pricePerKg)
         {
-            var reservation = await _context.Reservations.Include(r => r.Client).FirstOrDefaultAsync(r => r.Id == id);
-            if (reservation == null || reservation.Status != "Reserved")
+            try
             {
-                return NotFound();
+                var reservation = await _context.Reservations.Include(r => r.Client).FirstOrDefaultAsync(r => r.Id == id);
+                if (reservation == null || reservation.Status != "Reserved")
+                {
+                    return NotFound();
+                }
+
+                reservation.Status = "Completed";
+                _context.Update(reservation);
+
+                var sale = new Sale
+                {
+                    Date = DateTime.UtcNow,
+                    QuantityKg = reservation.Quantity,
+                    PricePerKg = pricePerKg,
+                    Total = reservation.Quantity * pricePerKg,
+                    ClientName = reservation.Client?.Name ?? "Unknown"
+                };
+
+                _context.Sales.Add(sale);
+                _context.Entry(sale).Property("ClientId").CurrentValue = reservation.ClientId;
+
+                await _context.SaveChangesAsync();
+
+                return RedirectToAction(nameof(Index));
             }
-
-            reservation.Status = "Completed";
-            _context.Update(reservation);
-
-            var sale = new Sale
+            catch (Exception)
             {
-                Date = DateTime.Now,
-                QuantityKg = reservation.Quantity,
-                PricePerKg = pricePerKg,
-                Total = reservation.Quantity * pricePerKg,
-                ClientName = reservation.Client?.Name ?? "Unknown"
-            };
-
-            // Link sale to client directly since EF expects ClientId shadow property or similar
-            // But Sale only has ClientName in model, though schema might have ClientId foreign key.
-            // Let's set the FK property if it exists, wait, earlier we saw EF has 'ClientId' as shadow property
-            _context.Sales.Add(sale);
-            _context.Entry(sale).Property("ClientId").CurrentValue = reservation.ClientId;
-
-            await _context.SaveChangesAsync();
-
-            return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpPost]
         public async Task<IActionResult> Cancel(int id)
         {
-            var reservation = await _context.Reservations.FindAsync(id);
-            if (reservation == null || reservation.Status != "Reserved")
+            try
             {
-                return NotFound();
-            }
+                var reservation = await _context.Reservations.FirstOrDefaultAsync(r => r.Id == id);
+                if (reservation == null || reservation.Status != "Reserved")
+                {
+                    return NotFound();
+                }
 
-            reservation.Status = "Cancelled";
-            _context.Update(reservation);
+                reservation.Status = "Cancelled";
+                _context.Update(reservation);
 
-            var inventory = await _context.Inventory.FirstOrDefaultAsync();
-            if (inventory != null)
-            {
+                var inventory = await _context.Inventory.FirstOrDefaultAsync();
+                if (inventory == null)
+                {
+                    inventory = new Inventory { TotalKg = 0 };
+                    _context.Inventory.Add(inventory);
+                }
+
                 inventory.TotalKg += reservation.Quantity;
                 _context.Update(inventory);
+
+                await _context.SaveChangesAsync();
+
+                return RedirectToAction(nameof(Index));
             }
-
-            await _context.SaveChangesAsync();
-
-            return RedirectToAction(nameof(Index));
+            catch (Exception)
+            {
+                return RedirectToAction(nameof(Index));
+            }
         }
     }
 }
