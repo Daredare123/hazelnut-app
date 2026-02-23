@@ -40,7 +40,15 @@ var localizationOptions = new RequestLocalizationOptions()
 
 app.UseRequestLocalization(localizationOptions);
 
-// Ensure database is created and initialized
+// Configure the HTTP request pipeline.
+if (!app.Environment.IsDevelopment())
+{
+    // Enable Production Exception handling to seamlessly route HTTP 500 errors to /Home/Error
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
+
+// Ensure database migrations run automatically on startup
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -48,10 +56,10 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<HazelnutVeb.Data.AppDbContext>();
         
-        // Automatically create schema/tables incrementally if they don't exist yet via EF native method
-        context.Database.EnsureCreated();
+        // Use Migrate instead of EnsureCreated to execute all EF snapshots correctly
+        context.Database.Migrate();
 
-        // Seed Inventory if empty
+        // Seed Inventory if empty ensuring at least one record
         if (!context.Inventory.Any())
         {
             context.Inventory.Add(new Inventory { TotalKg = 0 });
