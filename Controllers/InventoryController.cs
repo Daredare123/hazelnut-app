@@ -24,26 +24,40 @@ namespace HazelnutVeb.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var inventory = await _context.Inventory.FirstOrDefaultAsync();
-            if (inventory == null)
+            try
             {
-                inventory = new Inventory { TotalKg = 0 };
-                _context.Inventory.Add(inventory);
-                await _context.SaveChangesAsync();
+                var inventory = await _context.Inventory.FirstOrDefaultAsync();
+                if (inventory == null)
+                {
+                    inventory = new Inventory { TotalKg = 0 };
+                    _context.Inventory.Add(inventory);
+                    await _context.SaveChangesAsync();
+                }
+                return View(inventory);
             }
-            return View(inventory);
+            catch (Exception)
+            {
+                return View(new Inventory { TotalKg = 0 });
+            }
         }
 
         public async Task<IActionResult> Update()
         {
-            var inventory = await _context.Inventory.FirstOrDefaultAsync();
-            if (inventory == null)
+            try
             {
-                inventory = new Inventory { TotalKg = 0 };
-                _context.Inventory.Add(inventory);
-                await _context.SaveChangesAsync();
+                var inventory = await _context.Inventory.FirstOrDefaultAsync();
+                if (inventory == null)
+                {
+                    inventory = new Inventory { TotalKg = 0 };
+                    _context.Inventory.Add(inventory);
+                    await _context.SaveChangesAsync();
+                }
+                return View(inventory);
             }
-            return View(inventory);
+            catch (Exception)
+            {
+                return View(new Inventory { TotalKg = 0 });
+            }
         }
 
         [HttpPost]

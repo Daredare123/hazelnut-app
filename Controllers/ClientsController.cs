@@ -23,18 +23,25 @@ namespace HazelnutVeb.Controllers
         // GET: Clients
         public async Task<IActionResult> Index()
         {
-            var clients = await _context.Clients
-                .Select(c => new ClientListViewModel
-                {
-                    Id = c.Id,
-                    Name = c.Name,
-                    TotalQuantity = c.Sales != null ? c.Sales.Sum(s => s.QuantityKg) : 0,
-                    TotalRevenue = c.Sales != null ? c.Sales.Sum(s => s.QuantityKg * s.PricePerKg) : 0,
-                    TotalSalesCount = c.Sales != null ? c.Sales.Count : 0
-                })
-                .ToListAsync();
+            try
+            {
+                var clients = await _context.Clients
+                    .Select(c => new ClientListViewModel
+                    {
+                        Id = c.Id,
+                        Name = c.Name,
+                        TotalQuantity = c.Sales != null && c.Sales.Any() ? c.Sales.Sum(s => s.QuantityKg) : 0,
+                        TotalRevenue = c.Sales != null && c.Sales.Any() ? c.Sales.Sum(s => s.QuantityKg * s.PricePerKg) : 0,
+                        TotalSalesCount = c.Sales != null ? c.Sales.Count : 0
+                    })
+                    .ToListAsync() ?? new List<ClientListViewModel>();
 
-            return View(clients);
+                return View(clients);
+            }
+            catch (Exception)
+            {
+                return View(new List<ClientListViewModel>());
+            }
         }
 
         // GET: Clients/Details/5
@@ -129,35 +136,51 @@ namespace HazelnutVeb.Controllers
         // GET: Clients/Report
         public async Task<IActionResult> Report(int clientId, DateTime? startDate, DateTime? endDate)
         {
-            var client = await _context.Clients.FindAsync(clientId);
-            if (client == null) return NotFound();
-
-            var query = _context.Entry(client).Collection(c => c.Sales!).Query();
-
-            if (startDate.HasValue)
+            try
             {
-                query = query.Where(s => s.Date >= startDate.Value);
+                var client = await _context.Clients.FindAsync(clientId);
+                if (client == null) return NotFound();
+
+                var query = _context.Entry(client).Collection(c => c.Sales!).Query();
+
+                if (startDate.HasValue)
+                {
+                    query = query.Where(s => s.Date >= startDate.Value);
+                }
+
+                if (endDate.HasValue)
+                {
+                    query = query.Where(s => s.Date <= endDate.Value);
+                }
+
+                var sales = await query.ToListAsync() ?? new List<Sale>();
+
+                var model = new ClientReportViewModel
+                {
+                    ClientId = clientId,
+                    ClientName = client.Name,
+                    StartDate = startDate,
+                    EndDate = endDate,
+                    TotalQuantity = sales.Any() ? sales.Sum(s => s.QuantityKg) : 0,
+                    TotalRevenue = sales.Any() ? sales.Sum(s => s.QuantityKg * s.PricePerKg) : 0,
+                    TotalSalesCount = sales.Count
+                };
+
+                return View(model);
             }
-
-            if (endDate.HasValue)
+            catch (Exception)
             {
-                query = query.Where(s => s.Date <= endDate.Value);
+                return View(new ClientReportViewModel
+                {
+                    ClientId = clientId,
+                    ClientName = "Unknown Error",
+                    StartDate = startDate,
+                    EndDate = endDate,
+                    TotalQuantity = 0,
+                    TotalRevenue = 0,
+                    TotalSalesCount = 0
+                });
             }
-
-            var sales = await query.ToListAsync();
-
-            var model = new ClientReportViewModel
-            {
-                ClientId = clientId,
-                ClientName = client.Name,
-                StartDate = startDate,
-                EndDate = endDate,
-                TotalQuantity = sales.Sum(s => s.QuantityKg),
-                TotalRevenue = sales.Sum(s => s.QuantityKg * s.PricePerKg),
-                TotalSalesCount = sales.Count
-            };
-
-            return View(model);
         }
     }
 }

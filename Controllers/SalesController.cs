@@ -24,7 +24,15 @@ namespace HazelnutVeb.Controllers
 
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Sales.ToListAsync());
+            try
+            {
+                var sales = await _context.Sales.ToListAsync() ?? new List<Sale>();
+                return View(sales);
+            }
+            catch (Exception)
+            {
+                return View(new List<Sale>());
+            }
         }
 
         public IActionResult Create()

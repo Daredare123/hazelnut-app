@@ -24,28 +24,46 @@ namespace HazelnutVeb.Controllers
             int m = month ?? DateTime.Now.Month;
             int y = year ?? DateTime.Now.Year;
 
-            // Using EF Core queries
-            var sales = await _context.Sales
-                .Where(s => s.Date.Month == m && s.Date.Year == y)
-                .ToListAsync();
+            DateTime start = new DateTime(y, m, 1);
+            DateTime end = start.AddMonths(1);
 
-            var expenses = await _context.Expenses
-                .Where(e => e.Date.Month == m && e.Date.Year == y)
-                .ToListAsync();
-
-            var model = new MonthlyReportViewModel
+            try
             {
-                Month = m,
-                Year = y,
-                TotalSales = sales.Sum(s => s.Total),
-                TotalExpenses = expenses.Sum(e => e.Amount),
-                TotalKg = sales.Sum(s => s.QuantityKg),
-                TotalTransactions = sales.Count
-            };
+                var sales = await _context.Sales
+                    .Where(s => s.Date >= start && s.Date < end)
+                    .ToListAsync() ?? new List<Sale>();
 
-            model.Profit = model.TotalSales - model.TotalExpenses;
+                var expenses = await _context.Expenses
+                    .Where(e => e.Date >= start && e.Date < end)
+                    .ToListAsync() ?? new List<Expense>();
 
-            return View(model);
+                var model = new MonthlyReportViewModel
+                {
+                    Month = m,
+                    Year = y,
+                    TotalSales = sales.Any() ? sales.Sum(s => s.Total) : 0,
+                    TotalExpenses = expenses.Any() ? expenses.Sum(e => e.Amount) : 0,
+                    TotalKg = sales.Any() ? sales.Sum(s => s.QuantityKg) : 0,
+                    TotalTransactions = sales.Count
+                };
+
+                model.Profit = model.TotalSales - model.TotalExpenses;
+
+                return View(model);
+            }
+            catch (Exception)
+            {
+                return View(new MonthlyReportViewModel
+                {
+                    Month = m,
+                    Year = y,
+                    TotalSales = 0,
+                    TotalExpenses = 0,
+                    TotalKg = 0,
+                    TotalTransactions = 0,
+                    Profit = 0
+                });
+            }
         }
 
         public async Task<IActionResult> Yearly(int year)
@@ -55,47 +73,77 @@ namespace HazelnutVeb.Controllers
                 year = DateTime.Now.Year;
             }
 
-            var sales = await _context.Sales
-                .Where(s => s.Date.Year == year)
-                .ToListAsync();
+            DateTime start = new DateTime(year, 1, 1);
+            DateTime end = start.AddYears(1);
 
-            var model = new YearlyReportViewModel
+            try
             {
-                Year = year,
-                TotalRevenue = sales.Sum(s => s.QuantityKg * s.PricePerKg),
-                TotalQuantity = sales.Sum(s => s.QuantityKg),
-                TotalSalesCount = sales.Count
-            };
+                var sales = await _context.Sales
+                    .Where(s => s.Date >= start && s.Date < end)
+                    .ToListAsync() ?? new List<Sale>();
 
-            return View(model);
+                var model = new YearlyReportViewModel
+                {
+                    Year = year,
+                    TotalRevenue = sales.Any() ? sales.Sum(s => s.QuantityKg * s.PricePerKg) : 0,
+                    TotalQuantity = sales.Any() ? sales.Sum(s => s.QuantityKg) : 0,
+                    TotalSalesCount = sales.Count
+                };
+
+                return View(model);
+            }
+            catch (Exception)
+            {
+                return View(new YearlyReportViewModel
+                {
+                    Year = year,
+                    TotalRevenue = 0,
+                    TotalQuantity = 0,
+                    TotalSalesCount = 0
+                });
+            }
         }
 
         public async Task<IActionResult> DateRange(DateTime? startDate, DateTime? endDate)
         {
-            var query = _context.Sales.AsQueryable();
-
-            if (startDate.HasValue)
+            try
             {
-                query = query.Where(s => s.Date >= startDate.Value);
+                var query = _context.Sales.AsQueryable();
+
+                if (startDate.HasValue)
+                {
+                    query = query.Where(s => s.Date >= startDate.Value);
+                }
+
+                if (endDate.HasValue)
+                {
+                    query = query.Where(s => s.Date <= endDate.Value);
+                }
+
+                var sales = await query.ToListAsync() ?? new List<Sale>();
+
+                var model = new DateRangeReportViewModel
+                {
+                    StartDate = startDate,
+                    EndDate = endDate,
+                    TotalRevenue = sales.Any() ? sales.Sum(s => s.QuantityKg * s.PricePerKg) : 0,
+                    TotalQuantity = sales.Any() ? sales.Sum(s => s.QuantityKg) : 0,
+                    TotalSalesCount = sales.Count
+                };
+
+                return View(model);
             }
-
-            if (endDate.HasValue)
+            catch (Exception)
             {
-                query = query.Where(s => s.Date <= endDate.Value);
+                return View(new DateRangeReportViewModel
+                {
+                    StartDate = startDate,
+                    EndDate = endDate,
+                    TotalRevenue = 0,
+                    TotalQuantity = 0,
+                    TotalSalesCount = 0
+                });
             }
-
-            var sales = await query.ToListAsync();
-
-            var model = new DateRangeReportViewModel
-            {
-                StartDate = startDate,
-                EndDate = endDate,
-                TotalRevenue = sales.Sum(s => s.QuantityKg * s.PricePerKg),
-                TotalQuantity = sales.Sum(s => s.QuantityKg),
-                TotalSalesCount = sales.Count
-            };
-
-            return View(model);
         }
     }
 }
