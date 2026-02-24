@@ -15,6 +15,7 @@ namespace HazelnutVeb.Data
         public DbSet<Expense> Expenses { get; set; }
         public DbSet<Inventory> Inventory { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
+        public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -26,6 +27,7 @@ namespace HazelnutVeb.Data
             modelBuilder.Entity<Expense>().ToTable("Expenses");
             modelBuilder.Entity<Inventory>().ToTable("Inventory");
             modelBuilder.Entity<Reservation>().ToTable("Reservations");
+            modelBuilder.Entity<User>().ToTable("Users");
         }
     }
 }

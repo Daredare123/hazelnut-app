@@ -10,7 +10,7 @@ using HazelnutVeb.Services;
 
 namespace HazelnutVeb.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public class SalesController : Controller
     {
         private readonly AppDbContext _context;

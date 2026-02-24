@@ -46,27 +46,45 @@
                     <i class="bi bi-nut-fill text-warning me-2"></i>HazelnutVeb
                 </div>
                 <div class="list-group list-group-flush">
-                    <a class="list-group-item list-group-item-action list-group-item-dark bg-dark text-white-50" asp-controller="Home" asp-action="Dashboard">
-                        <i class="bi bi-speedometer2 me-2"></i> @Localizer["Dashboard"]
-                    </a>
-                    <a class="list-group-item list-group-item-action list-group-item-dark bg-dark text-white-50" asp-controller="Sales" asp-action="Index">
-                        <i class="bi bi-cart3 me-2"></i> @Localizer["Sales"]
-                    </a>
-                    <a class="list-group-item list-group-item-action list-group-item-dark bg-dark text-white-50" asp-controller="Reservations" asp-action="Index">
-                        <i class="bi bi-clock-history me-2"></i> @Localizer["Reservations"]
-                    </a>
-                    <a class="list-group-item list-group-item-action list-group-item-dark bg-dark text-white-50" asp-controller="Expenses" asp-action="Index">
-                        <i class="bi bi-wallet2 me-2"></i> @Localizer["Expenses"]
-                    </a>
-                    <a class="list-group-item list-group-item-action list-group-item-dark bg-dark text-white-50" asp-controller="Inventory" asp-action="Index">
-                        <i class="bi bi-box-seam me-2"></i> @Localizer["Inventory"]
-                    </a>
-                    <a class="list-group-item list-group-item-action list-group-item-dark bg-dark text-white-50" asp-controller="Reports" asp-action="Monthly">
-                        <i class="bi bi-graph-up-arrow me-2"></i> @Localizer["Reports"]
-                    </a>
-                    <a class="list-group-item list-group-item-action list-group-item-dark bg-dark text-white-50" asp-controller="Clients" asp-action="Index">
-                        <i class="bi bi-people me-2"></i> @Localizer["Clients"]
-                    </a>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a class="list-group-item list-group-item-action list-group-item-dark bg-dark text-white-50" asp-controller="Home" asp-action="Dashboard">
+                            <i class="bi bi-speedometer2 me-2"></i> @Localizer["Dashboard"]
+                        </a>
+                        <a class="list-group-item list-group-item-action list-group-item-dark bg-dark text-white-50" asp-controller="Sales" asp-action="Index">
+                            <i class="bi bi-cart3 me-2"></i> @Localizer["Sales"]
+                        </a>
+                        <a class="list-group-item list-group-item-action list-group-item-dark bg-dark text-white-50" asp-controller="Reservations" asp-action="Index">
+                            <i class="bi bi-clock-history me-2"></i> @Localizer["Reservations"]
+                        </a>
+                        <a class="list-group-item list-group-item-action list-group-item-dark bg-dark text-white-50" asp-controller="Expenses" asp-action="Index">
+                            <i class="bi bi-wallet2 me-2"></i> @Localizer["Expenses"]
+                        </a>
+                        <a class="list-group-item list-group-item-action list-group-item-dark bg-dark text-white-50" asp-controller="Inventory" asp-action="Index">
+                            <i class="bi bi-box-seam me-2"></i> @Localizer["Inventory"]
+                        </a>
+                        <a class="list-group-item list-group-item-action list-group-item-dark bg-dark text-white-50" asp-controller="Reports" asp-action="Monthly">
+                            <i class="bi bi-graph-up-arrow me-2"></i> @Localizer["Reports"]
+                        </a>
+                        <a class="list-group-item list-group-item-action list-group-item-dark bg-dark text-white-50" asp-controller="Clients" asp-action="Index">
+                            <i class="bi bi-people me-2"></i> @Localizer["Clients"]
+                        </a>
+                        <a class="list-group-item list-group-item-action list-group-item-dark bg-dark text-white-50" asp-controller="Users" asp-action="Index">
+                            <i class="bi bi-person-lines-fill me-2"></i> @Localizer["Users"]
+                        </a>
+                    }
+                    else if (User.IsInRole("Client"))
+                    {
+                        <a class="list-group-item list-group-item-action list-group-item-dark bg-dark text-white-50" asp-controller="Reservations" asp-action="MyOrders">
+                            <i class="bi bi-house-door me-2"></i> Dashboard
+                        </a>
+                        <a class="list-group-item list-group-item-action list-group-item-dark bg-dark text-white-50" asp-controller="Reservations" asp-action="Index">
+                            <i class="bi bi-clock-history me-2"></i> My Reservations
+                        </a>
+                        <a class="list-group-item list-group-item-action list-group-item-dark bg-dark text-white-50" asp-controller="Reservations" asp-action="Create">
+                            <i class="bi bi-plus-circle me-2"></i> Create Reservation
+                        </a>
+                    }
                 </div>
                 <div class="mt-auto p-3 border-top border-secondary">
                     <a class="btn btn-outline-danger w-100" asp-controller="Account" asp-action="Logout">

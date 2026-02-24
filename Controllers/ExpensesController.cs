@@ -9,7 +9,7 @@ using HazelnutVeb.Models;
 
 namespace HazelnutVeb.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public class ExpensesController : Controller
     {
         private readonly AppDbContext _context;

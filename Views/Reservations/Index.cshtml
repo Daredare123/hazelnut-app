@@ -52,13 +52,21 @@
                                     @item.Quantity.ToString("N2")
                                 </td>
                                 <td class="text-center">
-                                    @if (item.Status == "Reserved")
+                                    @if (item.Status == "Pending")
                                     {
                                         <span class="badge bg-warning text-dark px-3 py-2 rounded-pill shadow-sm">@item.Status</span>
+                                    }
+                                    else if (item.Status == "Approved")
+                                    {
+                                        <span class="badge bg-primary px-3 py-2 rounded-pill shadow-sm">@item.Status</span>
                                     }
                                     else if (item.Status == "Completed")
                                     {
                                         <span class="badge bg-success px-3 py-2 rounded-pill shadow-sm">@item.Status</span>
+                                    }
+                                    else if (item.Status == "Rejected" || item.Status == "Cancelled")
+                                    {
+                                        <span class="badge bg-danger px-3 py-2 rounded-pill shadow-sm">@item.Status</span>
                                     }
                                     else
                                     {
@@ -66,7 +74,25 @@
                                     }
                                 </td>
                                 <td class="pe-4 text-center">
-                                    @if(item.Status == "Reserved")
+                                    @if(item.Status == "Pending" && User.IsInRole("Admin"))
+                                    {
+                                        <div class="d-flex justify-content-center align-items-center gap-2">
+                                            <form asp-action="Approve" method="post" class="mb-0">
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                <button type="submit" class="btn btn-outline-success btn-sm rounded-pill shadow-sm py-1 px-3">
+                                                    <i class="bi bi-check-circle me-1"></i> Approve
+                                                </button>
+                                            </form>
+                                            <form asp-action="Reject" method="post" class="mb-0">
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill shadow-sm py-1 px-3"
+                                                    onclick="return confirm('Are you sure you want to reject this reservation? Inventory will be restored.')">
+                                                    <i class="bi bi-x-circle me-1"></i> Reject
+                                                </button>
+                                            </form>
+                                        </div>
+                                    }
+                                    else if(item.Status == "Approved" && User.IsInRole("Admin"))
                                     {
                                         <div class="d-flex justify-content-center align-items-center gap-2">
                                             <form asp-action="Complete" method="post" class="d-flex align-items-center mb-0 gap-2">

@@ -21,5 +21,8 @@ namespace HazelnutVeb.Models
 
         [Required]
         public string Status { get; set; } = "Reserved";
+
+        public int UserId { get; set; }
+        public User? User { get; set; }
     }
 }

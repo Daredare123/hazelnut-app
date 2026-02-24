@@ -11,24 +11,38 @@ using HazelnutVeb.Services;
 
 namespace HazelnutVeb.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin,Client")]
     public class ReservationsController : Controller
     {
         private readonly AppDbContext _context;
         private readonly NotificationService _notificationService;
+        private readonly EmailService _emailService;
 
-        public ReservationsController(AppDbContext context, NotificationService notificationService)
+        public ReservationsController(AppDbContext context, NotificationService notificationService, EmailService emailService)
         {
             _context = context;
             _notificationService = notificationService;
+            _emailService = emailService;
         }
 
         public async Task<IActionResult> Index()
         {
             try
             {
-                var reservations = await _context.Reservations
+                var query = _context.Reservations
                     .Include(r => r.Client)
+                    .Include(r => r.User)
+                    .AsQueryable();
+
+                var email = User.Identity?.Name;
+                var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+                if (currentUser != null && currentUser.Role != "Admin")
+                {
+                    query = query.Where(r => r.UserId == currentUser.Id);
+                }
+
+                var reservations = await query
                     .OrderByDescending(r => r.Date)
                     .ToListAsync() ?? new List<Reservation>();
                 return View(reservations);
@@ -37,6 +51,11 @@ namespace HazelnutVeb.Controllers
             {
                 return View(new List<Reservation>());
             }
+        }
+
+        public IActionResult MyOrders()
+        {
+            return View();
         }
 
         public IActionResult Create()
@@ -57,7 +76,7 @@ namespace HazelnutVeb.Controllers
 
             try
             {
-                reservation.Status = "Reserved";
+                reservation.Status = "Pending";
 
                 // Ensure PostgreSQL DateTime strictly enforced dynamically to UTC without nullable errors
                 if (reservation.Date != DateTime.MinValue)
@@ -84,6 +103,13 @@ namespace HazelnutVeb.Controllers
                     return View(reservation);
                 }
 
+                var email = User.Identity?.Name;
+                var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+                if (currentUser != null)
+                {
+                    reservation.UserId = currentUser.Id;
+                }
+
                 _context.Reservations.Add(reservation);
                 
                 inventory.TotalKg -= reservation.Quantity;
@@ -96,6 +122,8 @@ namespace HazelnutVeb.Controllers
                     await _notificationService.SendLowInventoryNotification(inventory.TotalKg);
                 }
 
+                await _emailService.SendEmailAsync("admin@hazelnut.com", "New Reservation", $"A new reservation for {reservation.Quantity} kg on {reservation.Date:yyyy-MM-dd} is pending approval.");
+
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
@@ -107,12 +135,56 @@ namespace HazelnutVeb.Controllers
         }
 
         [HttpPost]
+        public async Task<IActionResult> Approve(int id)
+        {
+            var reservation = await _context.Reservations.Include(r => r.User).FirstOrDefaultAsync(r => r.Id == id);
+            if (reservation == null || reservation.Status != "Pending") return NotFound();
+
+            reservation.Status = "Approved";
+            _context.Update(reservation);
+            await _context.SaveChangesAsync();
+
+            if (reservation.User != null)
+            {
+                await _emailService.SendEmailAsync(reservation.User.Email, "Reservation Approved", $"Your reservation for {reservation.Quantity} kg on {reservation.Date:yyyy-MM-dd} has been approved.");
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Reject(int id)
+        {
+            var reservation = await _context.Reservations.Include(r => r.User).FirstOrDefaultAsync(r => r.Id == id);
+            if (reservation == null || reservation.Status != "Pending") return NotFound();
+
+            reservation.Status = "Rejected";
+
+            var inventory = await _context.Inventory.FirstOrDefaultAsync();
+            if (inventory != null)
+            {
+                inventory.TotalKg += reservation.Quantity;
+                _context.Update(inventory);
+            }
+
+            _context.Update(reservation);
+            await _context.SaveChangesAsync();
+
+            if (reservation.User != null)
+            {
+                await _emailService.SendEmailAsync(reservation.User.Email, "Reservation Rejected", $"Your reservation for {reservation.Quantity} kg on {reservation.Date:yyyy-MM-dd} has been rejected.");
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
         public async Task<IActionResult> Complete(int id, double pricePerKg)
         {
             try
             {
                 var reservation = await _context.Reservations.Include(r => r.Client).FirstOrDefaultAsync(r => r.Id == id);
-                if (reservation == null || reservation.Status != "Reserved")
+                if (reservation == null || reservation.Status != "Approved")
                 {
                     return NotFound();
                 }
@@ -148,7 +220,7 @@ namespace HazelnutVeb.Controllers
             try
             {
                 var reservation = await _context.Reservations.FirstOrDefaultAsync(r => r.Id == id);
-                if (reservation == null || reservation.Status != "Reserved")
+                if (reservation == null || (reservation.Status != "Pending" && reservation.Status != "Approved"))
                 {
                     return NotFound();
                 }

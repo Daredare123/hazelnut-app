@@ -2,20 +2,23 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using HazelnutVeb.Data;
+using HazelnutVeb.Models;
 
 namespace HazelnutVeb.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly List<string> _users = new List<string> 
-        { 
-            "Dario", 
-            "Biljana", 
-            "Sime", 
-            "Keti", 
-            "Sandra" 
-        };
-        private readonly string _password = "Arenalesnici";
+        private readonly AppDbContext _context;
+
+        public AccountController(AppDbContext context)
+        {
+            _context = context;
+        }
 
         [HttpGet]
         public IActionResult Login()
@@ -24,34 +27,103 @@ namespace HazelnutVeb.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(string username, string password)
+        public async Task<IActionResult> Login(string email, string password)
         {
-            if (!string.IsNullOrEmpty(username) && _users.Contains(username) && password == _password)
+            if (!string.IsNullOrEmpty(email) && !string.IsNullOrEmpty(password))
             {
-                var claims = new List<Claim>
+                var hash = HashPassword(password);
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email && u.PasswordHash == hash);
+
+                if (user != null)
                 {
-                    new Claim(ClaimTypes.Name, username)
-                };
+                    var claims = new List<Claim>
+                    {
+                        new Claim(ClaimTypes.Name, user.Email),
+                        new Claim(ClaimTypes.Role, user.Role)
+                    };
 
-                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                var authProperties = new AuthenticationProperties();
+                    var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                    var authProperties = new AuthenticationProperties();
 
-                await HttpContext.SignInAsync(
-                    CookieAuthenticationDefaults.AuthenticationScheme,
-                    new ClaimsPrincipal(claimsIdentity),
-                    authProperties);
+                    await HttpContext.SignInAsync(
+                        CookieAuthenticationDefaults.AuthenticationScheme,
+                        new ClaimsPrincipal(claimsIdentity),
+                        authProperties);
 
-                return RedirectToAction("Dashboard", "Home");
+                    if (user.Role == "Admin")
+                    {
+                        return RedirectToAction("Dashboard", "Home");
+                    }
+                    else
+                    {
+                        return RedirectToAction("MyOrders", "Reservations");
+                    }
+                }
             }
 
-            ViewBag.ErrorMessage = "Invalid username or password";
+            ViewBag.ErrorMessage = "Invalid email or password";
             return View();
+        }
+
+        [HttpGet]
+        public IActionResult AccessDenied()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult Register()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Register(string email, string password, string confirmPassword)
+        {
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
+            {
+                ViewBag.ErrorMessage = "Email and password are required.";
+                return View();
+            }
+
+            if (password != confirmPassword)
+            {
+                ViewBag.ErrorMessage = "Passwords do not match.";
+                return View();
+            }
+
+            if (await _context.Users.AnyAsync(u => u.Email == email))
+            {
+                ViewBag.ErrorMessage = "Email is already registered.";
+                return View();
+            }
+
+            var user = new User
+            {
+                Email = email,
+                PasswordHash = HashPassword(password),
+                Role = "Client"
+            };
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Login");
         }
 
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Login", "Account");
+        }
+
+        private string HashPassword(string password)
+        {
+            using (var sha256 = SHA256.Create())
+            {
+                byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+                return Convert.ToBase64String(bytes);
+            }
         }
     }
 }
