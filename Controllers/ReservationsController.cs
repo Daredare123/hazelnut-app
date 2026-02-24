@@ -60,7 +60,10 @@ namespace HazelnutVeb.Controllers
 
         public IActionResult Create()
         {
-            ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name");
+            if (User.IsInRole("Admin"))
+            {
+                ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name");
+            }
             return View(new Reservation { Date = DateTime.UtcNow });
         }
 
@@ -68,9 +71,23 @@ namespace HazelnutVeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("ClientId,Quantity,Date")] Reservation reservation)
         {
+            if (User.IsInRole("Client"))
+            {
+                var email = User.Identity?.Name;
+                var client = await _context.Clients.FirstOrDefaultAsync(c => c.User.Email == email);
+                if (client != null)
+                {
+                    reservation.ClientId = client.Id;
+                }
+                ModelState.Remove("ClientId");
+            }
+
             if (!ModelState.IsValid)
             {
-                ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name", reservation.ClientId);
+                if (User.IsInRole("Admin"))
+                {
+                    ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name", reservation.ClientId);
+                }
                 return View(reservation);
             }
 
@@ -99,7 +116,10 @@ namespace HazelnutVeb.Controllers
                 if (reservation.Quantity > inventory.TotalKg)
                 {
                     ModelState.AddModelError("Quantity", $"Not enough inventory. Current stock: {inventory.TotalKg:N2} kg");
-                    ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name", reservation.ClientId);
+                    if (User.IsInRole("Admin"))
+                    {
+                        ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name", reservation.ClientId);
+                    }
                     return View(reservation);
                 }
 
@@ -129,7 +149,10 @@ namespace HazelnutVeb.Controllers
             catch (Exception ex)
             {
                 ModelState.AddModelError("", ex.InnerException?.Message ?? ex.Message);
-                ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name", reservation.ClientId);
+                if (User.IsInRole("Admin"))
+                {
+                    ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name", reservation.ClientId);
+                }
                 return View(reservation);
             }
         }

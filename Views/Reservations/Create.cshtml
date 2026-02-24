@@ -23,10 +23,13 @@
             <div class="card-body p-4 p-md-5">
                 <form asp-action="Create">
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-                    <div class="mb-4">
-                        <label asp-for="ClientId" class="form-label text-secondary fw-bold text-uppercase small">Client</label>
-                        <select asp-for="ClientId" class="form-select border-0 bg-light" asp-items="ViewBag.ClientId"></select>
-                    </div>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <div class="mb-4">
+                            <label asp-for="ClientId" class="form-label text-secondary fw-bold text-uppercase small">Client</label>
+                            <select asp-for="ClientId" class="form-select border-0 bg-light" asp-items="ViewBag.ClientId"></select>
+                        </div>
+                    }
                     <div class="mb-4">
                         <label asp-for="Quantity" class="form-label text-secondary fw-bold text-uppercase small"></label>
                         <input asp-for="Quantity" class="form-control border-0 bg-light fw-bold text-dark" style="font-size: 1.1rem" placeholder="e.g. 15.5" />
@@ -34,7 +37,7 @@
                     </div>
                     <div class="mb-4">
                         <label asp-for="Date" class="form-label text-secondary fw-bold text-uppercase small"></label>
-                        <input asp-for="Date" class="form-control border-0 bg-light fw-bold" type="datetime-local" />
+                        <input asp-for="Date" type="date" class="form-control" />
                         <span asp-validation-for="Date" class="text-danger small mt-1 d-block"></span>
                     </div>
 

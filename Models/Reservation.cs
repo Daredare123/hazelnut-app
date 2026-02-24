@@ -17,6 +17,7 @@ namespace HazelnutVeb.Models
         public double Quantity { get; set; }
 
         [Required]
+        [DataType(DataType.Date)]
         public DateTime Date { get; set; }
 
         [Required]
