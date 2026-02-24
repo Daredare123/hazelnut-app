@@ -30,7 +30,6 @@ namespace HazelnutVeb.Controllers
             try
             {
                 var query = _context.Reservations
-                    .Include(r => r.Client)
                     .Include(r => r.User)
                     .AsQueryable();
 
@@ -60,73 +59,39 @@ namespace HazelnutVeb.Controllers
 
         public IActionResult Create()
         {
-            if (User.IsInRole("Admin"))
-            {
-                ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name");
-            }
             return View(new Reservation { Date = DateTime.UtcNow });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ClientId,Quantity,Date")] Reservation reservation)
+        public async Task<IActionResult> Create([Bind("Quantity,Date")] Reservation reservation)
         {
             if (reservation == null)
             {
                 ModelState.AddModelError("", "Reservation data is missing.");
-                if (User.IsInRole("Admin"))
-                {
-                    ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name");
-                }
                 return View(new Reservation { Date = DateTime.UtcNow });
             }
 
-            if (User.IsInRole("Client"))
+            var emailForUserId = User.Identity?.Name;
+            if (string.IsNullOrEmpty(emailForUserId))
             {
-                var email = User.Identity?.Name;
-                if (string.IsNullOrEmpty(email))
-                {
-                    ModelState.AddModelError("", "User email not found. Please log in again.");
-                    return View(reservation);
-                }
+                ModelState.AddModelError("", "Unable to verify current user session.");
+                return View(reservation);
+            }
 
-                var userRecord = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
-                if (userRecord == null)
-                {
-                    ModelState.AddModelError("", "Logged-in user not found in the database. Please contact support.");
-                    return View(reservation);
-                }
-
-                var client = await _context.Clients.FirstOrDefaultAsync(c => c.UserId == userRecord.Id);
-                if (client == null)
-                {
-                    client = new Client
-                    {
-                        Name = userRecord.Email,
-                        UserId = userRecord.Id,
-                        Phone = "Unknown",
-                        City = "Unknown"
-                    };
-                    _context.Clients.Add(client);
-                    await _context.SaveChangesAsync();
-                    
-                    // Reload Client
-                    client = await _context.Clients.FirstOrDefaultAsync(c => c.UserId == userRecord.Id);
-                }
-
-                if (client != null)
-                {
-                    reservation.ClientId = client.Id;
-                }
-                ModelState.Remove("ClientId");
+            var currentUserForId = await _context.Users.FirstOrDefaultAsync(u => u.Email == emailForUserId);
+            if (currentUserForId != null)
+            {
+                reservation.UserId = currentUserForId.Id;
+            }
+            else
+            {
+                ModelState.AddModelError("", "User account not found based on current session.");
+                return View(reservation);
             }
 
             if (!ModelState.IsValid)
             {
-                if (User.IsInRole("Admin"))
-                {
-                    ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name", reservation.ClientId);
-                }
                 return View(reservation);
             }
 
@@ -135,20 +100,6 @@ namespace HazelnutVeb.Controllers
                 if (reservation.Quantity <= 0)
                 {
                     ModelState.AddModelError("Quantity", "Quantity must be greater than zero.");
-                    if (User.IsInRole("Admin"))
-                    {
-                        ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name", reservation.ClientId);
-                    }
-                    return View(reservation);
-                }
-
-                if (reservation.ClientId <= 0)
-                {
-                    ModelState.AddModelError("ClientId", "Please select a valid client.");
-                    if (User.IsInRole("Admin"))
-                    {
-                        ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name", reservation.ClientId);
-                    }
                     return View(reservation);
                 }
 
@@ -175,36 +126,6 @@ namespace HazelnutVeb.Controllers
                 if (reservation.Quantity > inventory.TotalKg)
                 {
                     ModelState.AddModelError("Quantity", $"Not enough inventory. Current stock: {inventory.TotalKg:N2} kg");
-                    if (User.IsInRole("Admin"))
-                    {
-                        ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name", reservation.ClientId);
-                    }
-                    return View(reservation);
-                }
-
-                var emailForUserId = User.Identity?.Name;
-                if (string.IsNullOrEmpty(emailForUserId))
-                {
-                    ModelState.AddModelError("", "Unable to verify current user session.");
-                    if (User.IsInRole("Admin"))
-                    {
-                        ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name", reservation.ClientId);
-                    }
-                    return View(reservation);
-                }
-
-                var currentUserForId = await _context.Users.FirstOrDefaultAsync(u => u.Email == emailForUserId);
-                if (currentUserForId != null)
-                {
-                    reservation.UserId = currentUserForId.Id;
-                }
-                else
-                {
-                    ModelState.AddModelError("", "User account not found while saving reservation.");
-                    if (User.IsInRole("Admin"))
-                    {
-                        ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name", reservation.ClientId);
-                    }
                     return View(reservation);
                 }
 
@@ -227,10 +148,6 @@ namespace HazelnutVeb.Controllers
             catch (Exception ex)
             {
                 ModelState.AddModelError("", ex.InnerException?.Message ?? ex.Message);
-                if (User.IsInRole("Admin"))
-                {
-                    ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name", reservation.ClientId);
-                }
                 return View(reservation);
             }
         }
@@ -284,7 +201,7 @@ namespace HazelnutVeb.Controllers
         {
             try
             {
-                var reservation = await _context.Reservations.Include(r => r.Client).FirstOrDefaultAsync(r => r.Id == id);
+                var reservation = await _context.Reservations.Include(r => r.User).FirstOrDefaultAsync(r => r.Id == id);
                 if (reservation == null || reservation.Status != "Approved")
                 {
                     return NotFound();
@@ -299,11 +216,16 @@ namespace HazelnutVeb.Controllers
                     QuantityKg = reservation.Quantity,
                     PricePerKg = pricePerKg,
                     Total = reservation.Quantity * pricePerKg,
-                    ClientName = reservation.Client?.Name ?? "Unknown"
+                    ClientName = reservation.User?.Email ?? "Unknown"
                 };
 
                 _context.Sales.Add(sale);
-                _context.Entry(sale).Property("ClientId").CurrentValue = reservation.ClientId;
+                
+                var client = await _context.Clients.FirstOrDefaultAsync(c => c.UserId == reservation.UserId);
+                if (client != null)
+                {
+                    _context.Entry(sale).Property("ClientId").CurrentValue = client.Id;
+                }
 
                 await _context.SaveChangesAsync();
 

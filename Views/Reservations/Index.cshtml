@@ -46,7 +46,7 @@
                                     @item.Date.ToString("dd MMM yyyy")
                                 </td>
                                 <td>
-                                    @(item.Client?.Name ?? "Unknown")
+                                    @(item.User?.Email ?? "Unknown")
                                 </td>
                                 <td class="text-end font-monospace">
                                     @item.Quantity.ToString("N2")

@@ -8,10 +8,6 @@ namespace HazelnutVeb.Models
         public int Id { get; set; }
         
         [Required]
-        public int ClientId { get; set; }
-        public Client? Client { get; set; }
-
-        [Required]
         [Display(Name = "Quantity (Kg)")]
         [Range(0.01, double.MaxValue, ErrorMessage = "Quantity must be greater than 0.")]
         public double Quantity { get; set; }
