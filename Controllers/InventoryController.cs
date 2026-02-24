@@ -92,7 +92,7 @@ namespace HazelnutVeb.Controllers
 
                 if (dbInventory.TotalKg <= 5)
                 {
-                    await _notificationService.SendLowInventoryNotification(dbInventory.TotalKg);
+                    await _notificationService.SendLowInventoryAlert();
                 }
 
                 return RedirectToAction(nameof(Index));

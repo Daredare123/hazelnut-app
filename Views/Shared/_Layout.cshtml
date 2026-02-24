@@ -29,6 +29,11 @@
         .list-group-item-action { border: none; padding: 12px 20px; }
         .list-group-item-action:hover { background-color: #495057; color: #fff !important; }
         .list-group-item.active { background-color: #0d6efd; color: #fff; border-color: #0d6efd; }
+        .dark-mode { background-color: #121212; color: #ffffff; }
+        .dark-mode .card { background-color: #1e1e1e; }
+        .dark-mode .table { color: #ffffff; }
+        .dark-mode .form-control { background-color: #2a2a2a; color: #ffffff; border-color: #444; }
+        .dark-mode .navbar { background-color: #1a1a1a !important; }
     </style>
 </head>
 <body class="bg-light">
@@ -87,6 +92,9 @@
                                 <a href="?culture=en" class="btn @(currentCulture == "en" ? "btn-primary" : "btn-outline-primary")">EN</a>
                             </div>
                         </div>
+                        <button class="btn btn-outline-secondary border-0 me-3 dark-mode-toggle" id="darkModeToggle">
+                            🌙
+                        </button>
                         <div class="dropdown">
                             <a class="nav-link dropdown-toggle text-dark fw-bold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-person-circle me-1"></i> @User.Identity.Name
@@ -103,8 +111,11 @@
              else
              {
                  <!-- Simple Navbar for non-authenticated users (Login page) -->
-                 <nav class="navbar navbar-light bg-white border-bottom px-4 shadow-sm">
+                 <nav class="navbar navbar-light bg-white border-bottom px-4 shadow-sm d-flex justify-content-between">
                      <span class="navbar-brand mb-0 h1"><i class="bi bi-nut-fill text-warning me-2"></i>HazelnutVeb</span>
+                     <button class="btn btn-outline-secondary border-0 dark-mode-toggle" id="darkModeToggleGuest">
+                         🌙
+                     </button>
                  </nav>
              }
 
@@ -124,6 +135,31 @@
                     document.body.classList.toggle('sb-sidenav-toggled');
                 });
             }
+
+            const isDark = localStorage.getItem("theme") === "dark";
+            if (isDark) {
+                document.body.classList.add("dark-mode");
+                document.body.classList.remove("bg-light");
+            }
+
+            const toggles = document.querySelectorAll('.dark-mode-toggle');
+            toggles.forEach(toggle => {
+                toggle.innerHTML = isDark ? '☀️' : '🌙';
+                toggle.addEventListener('click', () => {
+                    document.body.classList.toggle('dark-mode');
+                    const currentlyDark = document.body.classList.contains('dark-mode');
+                    
+                    if (currentlyDark) {
+                        localStorage.setItem("theme", "dark");
+                        document.body.classList.remove("bg-light");
+                        toggles.forEach(t => t.innerHTML = '☀️');
+                    } else {
+                        localStorage.setItem("theme", "light");
+                        document.body.classList.add("bg-light");
+                        toggles.forEach(t => t.innerHTML = '🌙');
+                    }
+                });
+            });
         });
 
         if ('serviceWorker' in navigator) {
