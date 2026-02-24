@@ -71,14 +71,47 @@ namespace HazelnutVeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("ClientId,Quantity,Date")] Reservation reservation)
         {
+            if (reservation == null)
+            {
+                ModelState.AddModelError("", "Reservation data is missing.");
+                if (User.IsInRole("Admin"))
+                {
+                    ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name");
+                }
+                return View(new Reservation { Date = DateTime.UtcNow });
+            }
+
             if (User.IsInRole("Client"))
             {
                 var email = User.Identity?.Name;
-                var client = await _context.Clients.FirstOrDefaultAsync(c => c.User.Email == email);
-                if (client != null)
+                if (string.IsNullOrEmpty(email))
                 {
-                    reservation.ClientId = client.Id;
+                    ModelState.AddModelError("", "User email not found. Please log in again.");
+                    return View(reservation);
                 }
+
+                var userRecord = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+                if (userRecord == null)
+                {
+                    ModelState.AddModelError("", "Logged-in user not found in the database. Please contact support.");
+                    return View(reservation);
+                }
+
+                var client = await _context.Clients.FirstOrDefaultAsync(c => c.UserId == userRecord.Id);
+                if (client == null)
+                {
+                    client = new Client
+                    {
+                        UserId = userRecord.Id,
+                        Name = userRecord.Email.Split('@')[0], 
+                        Phone = "Unknown",
+                        City = "Unknown"
+                    };
+                    _context.Clients.Add(client);
+                    await _context.SaveChangesAsync();
+                }
+
+                reservation.ClientId = client.Id;
                 ModelState.Remove("ClientId");
             }
 
@@ -93,6 +126,26 @@ namespace HazelnutVeb.Controllers
 
             try
             {
+                if (reservation.Quantity <= 0)
+                {
+                    ModelState.AddModelError("Quantity", "Quantity must be greater than zero.");
+                    if (User.IsInRole("Admin"))
+                    {
+                        ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name", reservation.ClientId);
+                    }
+                    return View(reservation);
+                }
+
+                if (reservation.ClientId <= 0)
+                {
+                    ModelState.AddModelError("ClientId", "Please select a valid client.");
+                    if (User.IsInRole("Admin"))
+                    {
+                        ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name", reservation.ClientId);
+                    }
+                    return View(reservation);
+                }
+
                 reservation.Status = "Pending";
 
                 // Ensure PostgreSQL DateTime strictly enforced dynamically to UTC without nullable errors
@@ -123,11 +176,30 @@ namespace HazelnutVeb.Controllers
                     return View(reservation);
                 }
 
-                var email = User.Identity?.Name;
-                var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
-                if (currentUser != null)
+                var emailForUserId = User.Identity?.Name;
+                if (string.IsNullOrEmpty(emailForUserId))
                 {
-                    reservation.UserId = currentUser.Id;
+                    ModelState.AddModelError("", "Unable to verify current user session.");
+                    if (User.IsInRole("Admin"))
+                    {
+                        ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name", reservation.ClientId);
+                    }
+                    return View(reservation);
+                }
+
+                var currentUserForId = await _context.Users.FirstOrDefaultAsync(u => u.Email == emailForUserId);
+                if (currentUserForId != null)
+                {
+                    reservation.UserId = currentUserForId.Id;
+                }
+                else
+                {
+                    ModelState.AddModelError("", "User account not found while saving reservation.");
+                    if (User.IsInRole("Admin"))
+                    {
+                        ViewData["ClientId"] = new SelectList(_context.Clients, "Id", "Name", reservation.ClientId);
+                    }
+                    return View(reservation);
                 }
 
                 _context.Reservations.Add(reservation);
