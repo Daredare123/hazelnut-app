@@ -102,16 +102,22 @@ namespace HazelnutVeb.Controllers
                 {
                     client = new Client
                     {
+                        Name = userRecord.Email,
                         UserId = userRecord.Id,
-                        Name = userRecord.Email.Split('@')[0], 
                         Phone = "Unknown",
                         City = "Unknown"
                     };
                     _context.Clients.Add(client);
                     await _context.SaveChangesAsync();
+                    
+                    // Reload Client
+                    client = await _context.Clients.FirstOrDefaultAsync(c => c.UserId == userRecord.Id);
                 }
 
-                reservation.ClientId = client.Id;
+                if (client != null)
+                {
+                    reservation.ClientId = client.Id;
+                }
                 ModelState.Remove("ClientId");
             }
 
