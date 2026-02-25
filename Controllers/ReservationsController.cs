@@ -31,7 +31,6 @@ namespace HazelnutVeb.Controllers
             {
                 var query = _context.Reservations
                     .Include(r => r.Client)
-                    .ThenInclude(c => c.User)
                     .AsQueryable();
 
                 var email = User.Identity?.Name;
@@ -39,7 +38,7 @@ namespace HazelnutVeb.Controllers
 
                 if (currentUser != null && currentUser.Role != "Admin")
                 {
-                    query = query.Where(r => r.Client.UserId == currentUser.Id);
+                    query = query.Where(r => r.Client.Email == email);
                 }
 
                 var reservations = await query
@@ -73,42 +72,33 @@ namespace HazelnutVeb.Controllers
                 return View(new Reservation { Date = DateTime.UtcNow });
             }
 
-            var emailForUserId = User.Identity?.Name;
-            if (string.IsNullOrEmpty(emailForUserId))
+            var email = User.Identity?.Name;
+            if (string.IsNullOrEmpty(email))
             {
                 ModelState.AddModelError("", "Unable to verify current user session.");
                 return View(reservation);
             }
 
-            var currentUserForId = await _context.Users.FirstOrDefaultAsync(u => u.Email == emailForUserId);
-            if (currentUserForId != null)
+            var client = await _context.Clients.FirstOrDefaultAsync(c => c.Email == email);
+            if (client == null)
             {
-                var client = await _context.Clients.FirstOrDefaultAsync(c => c.UserId == currentUserForId.Id);
-                if (client == null)
+                client = new Client
                 {
-                    client = new Client
-                    {
-                        Name = currentUserForId.Email,
-                        UserId = currentUserForId.Id,
-                        Phone = "Unknown",
-                        City = "Unknown"
-                    };
-                    _context.Clients.Add(client);
-                    await _context.SaveChangesAsync();
-                    
-                    // Reload Client
-                    client = await _context.Clients.FirstOrDefaultAsync(c => c.UserId == currentUserForId.Id);
-                }
-
-                if (client != null)
-                {
-                    reservation.ClientId = client.Id;
-                }
+                    Email = email,
+                    Name = email,
+                    Phone = "Unknown",
+                    City = "Unknown"
+                };
+                _context.Clients.Add(client);
+                await _context.SaveChangesAsync();
+                
+                // Reload Client
+                client = await _context.Clients.FirstOrDefaultAsync(c => c.Email == email);
             }
-            else
+
+            if (client != null)
             {
-                ModelState.AddModelError("", "User account not found based on current session.");
-                return View(reservation);
+                reservation.ClientId = client.Id;
             }
 
             if (!ModelState.IsValid)
@@ -176,16 +166,16 @@ namespace HazelnutVeb.Controllers
         [HttpPost]
         public async Task<IActionResult> Approve(int id)
         {
-            var reservation = await _context.Reservations.Include(r => r.Client).ThenInclude(c => c.User).FirstOrDefaultAsync(r => r.Id == id);
+            var reservation = await _context.Reservations.Include(r => r.Client).FirstOrDefaultAsync(r => r.Id == id);
             if (reservation == null || reservation.Status != "Pending") return NotFound();
 
             reservation.Status = "Approved";
             _context.Update(reservation);
             await _context.SaveChangesAsync();
 
-            if (reservation.Client?.User != null)
+            if (!string.IsNullOrEmpty(reservation.Client?.Email))
             {
-                await _emailService.SendEmailAsync(reservation.Client.User.Email, "Reservation Approved", $"Your reservation for {reservation.Quantity} kg on {reservation.Date:yyyy-MM-dd} has been approved.");
+                await _emailService.SendEmailAsync(reservation.Client.Email, "Reservation Approved", $"Your reservation for {reservation.Quantity} kg on {reservation.Date:yyyy-MM-dd} has been approved.");
             }
 
             return RedirectToAction(nameof(Index));
@@ -194,7 +184,7 @@ namespace HazelnutVeb.Controllers
         [HttpPost]
         public async Task<IActionResult> Reject(int id)
         {
-            var reservation = await _context.Reservations.Include(r => r.Client).ThenInclude(c => c.User).FirstOrDefaultAsync(r => r.Id == id);
+            var reservation = await _context.Reservations.Include(r => r.Client).FirstOrDefaultAsync(r => r.Id == id);
             if (reservation == null || reservation.Status != "Pending") return NotFound();
 
             reservation.Status = "Rejected";
@@ -209,9 +199,9 @@ namespace HazelnutVeb.Controllers
             _context.Update(reservation);
             await _context.SaveChangesAsync();
 
-            if (reservation.Client?.User != null)
+            if (!string.IsNullOrEmpty(reservation.Client?.Email))
             {
-                await _emailService.SendEmailAsync(reservation.Client.User.Email, "Reservation Rejected", $"Your reservation for {reservation.Quantity} kg on {reservation.Date:yyyy-MM-dd} has been rejected.");
+                await _emailService.SendEmailAsync(reservation.Client.Email, "Reservation Rejected", $"Your reservation for {reservation.Quantity} kg on {reservation.Date:yyyy-MM-dd} has been rejected.");
             }
 
             return RedirectToAction(nameof(Index));
@@ -222,7 +212,7 @@ namespace HazelnutVeb.Controllers
         {
             try
             {
-                var reservation = await _context.Reservations.Include(r => r.Client).ThenInclude(c => c.User).FirstOrDefaultAsync(r => r.Id == id);
+                var reservation = await _context.Reservations.Include(r => r.Client).FirstOrDefaultAsync(r => r.Id == id);
                 if (reservation == null || reservation.Status != "Approved")
                 {
                     return NotFound();
@@ -237,7 +227,7 @@ namespace HazelnutVeb.Controllers
                     QuantityKg = reservation.Quantity,
                     PricePerKg = pricePerKg,
                     Total = reservation.Quantity * pricePerKg,
-                    ClientName = reservation.Client?.User?.Email ?? "Unknown"
+                    ClientName = reservation.Client?.Email ?? "Unknown"
                 };
 
                 _context.Sales.Add(sale);

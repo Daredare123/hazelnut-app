@@ -21,7 +21,6 @@ namespace HazelnutVeb.Models
         // Navigation property
         public ICollection<Sale>? Sales { get; set; }
 
-        public int UserId { get; set; }
-        public User User { get; set; }
+        public string Email { get; set; } = string.Empty;
     }
 }

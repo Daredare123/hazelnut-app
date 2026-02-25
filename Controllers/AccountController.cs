@@ -110,13 +110,13 @@ namespace HazelnutVeb.Controllers
 
             if (user.Role == "Client")
             {
-                bool clientExists = await _context.Clients.AnyAsync(c => c.UserId == user.Id);
+                bool clientExists = await _context.Clients.AnyAsync(c => c.Email == user.Email);
                 if (!clientExists)
                 {
                     var client = new Client
                     {
                         Name = user.Email,
-                        UserId = user.Id
+                        Email = user.Email
                     };
                     _context.Clients.Add(client);
                     await _context.SaveChangesAsync();

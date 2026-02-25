@@ -29,10 +29,6 @@ namespace HazelnutVeb.Data
             modelBuilder.Entity<Reservation>().ToTable("Reservations");
             modelBuilder.Entity<User>().ToTable("Users");
 
-            modelBuilder.Entity<Client>()
-                .HasOne(c => c.User)
-                .WithMany()
-                .HasForeignKey(c => c.UserId);
         }
     }
 }
