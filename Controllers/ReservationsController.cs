@@ -146,6 +146,12 @@ namespace HazelnutVeb.Controllers
                 _context.Update(inventory);
                 
                 await _context.SaveChangesAsync();
+                
+                await _emailService.SendEmailAsync(
+                    "stojanceskidario12@gmail.com",
+                    "New Reservation Created",
+                    $"A new reservation has been created by {client.Name} for {reservation.Date} with quantity {reservation.Quantity}."
+                );
 
                 if (inventory.TotalKg <= 5)
                 {
