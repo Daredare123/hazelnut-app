@@ -4,10 +4,10 @@ namespace HazelnutVeb.Services
 {
     public class EmailService
     {
-        public Task SendEmailAsync(string to, string subject, string body)
+        public Task SendEmailAsync(string toEmail, string subject, string body)
         {
-            // Dummy implementation to satisfy the compiler and the requested "Use existing EmailService"
-            System.Console.WriteLine($"Email sent to {to}: {subject}");
+            // Dummy implementation satisfying compiler requirements without modifying authentication/business logic
+            System.Console.WriteLine($"Email sent to {toEmail}: {subject}");
             return Task.CompletedTask;
         }
     }
