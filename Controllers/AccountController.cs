@@ -32,24 +32,25 @@ namespace HazelnutVeb.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(string email, string password, bool rememberMe = false)
+        public async Task<IActionResult> Login(LoginViewModel model)
         {
-            if (!string.IsNullOrEmpty(email) && !string.IsNullOrEmpty(password))
+            if (ModelState.IsValid)
             {
                 var result = await _signInManager.PasswordSignInAsync(
-                    email,
-                    password,
-                    rememberMe,
+                    model.Email,
+                    model.Password,
+                    model.RememberMe,
                     lockoutOnFailure: false);
 
                 if (result.Succeeded)
                 {
                     return RedirectToAction("Index", "Home");
                 }
+
+                ModelState.AddModelError("", "Invalid login attempt.");
             }
 
-            ViewBag.ErrorMessage = "Invalid email or password";
-            return View();
+            return View(model);
         }
 
         [HttpGet]
