@@ -30,7 +30,8 @@ namespace HazelnutVeb.Controllers
             try
             {
                 var query = _context.Reservations
-                    .Include(r => r.User)
+                    .Include(r => r.Client)
+                    .ThenInclude(c => c.User)
                     .AsQueryable();
 
                 var email = User.Identity?.Name;
@@ -38,7 +39,7 @@ namespace HazelnutVeb.Controllers
 
                 if (currentUser != null && currentUser.Role != "Admin")
                 {
-                    query = query.Where(r => r.UserId == currentUser.Id);
+                    query = query.Where(r => r.Client.UserId == currentUser.Id);
                 }
 
                 var reservations = await query
@@ -82,7 +83,27 @@ namespace HazelnutVeb.Controllers
             var currentUserForId = await _context.Users.FirstOrDefaultAsync(u => u.Email == emailForUserId);
             if (currentUserForId != null)
             {
-                reservation.UserId = currentUserForId.Id;
+                var client = await _context.Clients.FirstOrDefaultAsync(c => c.UserId == currentUserForId.Id);
+                if (client == null)
+                {
+                    client = new Client
+                    {
+                        Name = currentUserForId.Email,
+                        UserId = currentUserForId.Id,
+                        Phone = "Unknown",
+                        City = "Unknown"
+                    };
+                    _context.Clients.Add(client);
+                    await _context.SaveChangesAsync();
+                    
+                    // Reload Client
+                    client = await _context.Clients.FirstOrDefaultAsync(c => c.UserId == currentUserForId.Id);
+                }
+
+                if (client != null)
+                {
+                    reservation.ClientId = client.Id;
+                }
             }
             else
             {
@@ -155,16 +176,16 @@ namespace HazelnutVeb.Controllers
         [HttpPost]
         public async Task<IActionResult> Approve(int id)
         {
-            var reservation = await _context.Reservations.Include(r => r.User).FirstOrDefaultAsync(r => r.Id == id);
+            var reservation = await _context.Reservations.Include(r => r.Client).ThenInclude(c => c.User).FirstOrDefaultAsync(r => r.Id == id);
             if (reservation == null || reservation.Status != "Pending") return NotFound();
 
             reservation.Status = "Approved";
             _context.Update(reservation);
             await _context.SaveChangesAsync();
 
-            if (reservation.User != null)
+            if (reservation.Client?.User != null)
             {
-                await _emailService.SendEmailAsync(reservation.User.Email, "Reservation Approved", $"Your reservation for {reservation.Quantity} kg on {reservation.Date:yyyy-MM-dd} has been approved.");
+                await _emailService.SendEmailAsync(reservation.Client.User.Email, "Reservation Approved", $"Your reservation for {reservation.Quantity} kg on {reservation.Date:yyyy-MM-dd} has been approved.");
             }
 
             return RedirectToAction(nameof(Index));
@@ -173,7 +194,7 @@ namespace HazelnutVeb.Controllers
         [HttpPost]
         public async Task<IActionResult> Reject(int id)
         {
-            var reservation = await _context.Reservations.Include(r => r.User).FirstOrDefaultAsync(r => r.Id == id);
+            var reservation = await _context.Reservations.Include(r => r.Client).ThenInclude(c => c.User).FirstOrDefaultAsync(r => r.Id == id);
             if (reservation == null || reservation.Status != "Pending") return NotFound();
 
             reservation.Status = "Rejected";
@@ -188,9 +209,9 @@ namespace HazelnutVeb.Controllers
             _context.Update(reservation);
             await _context.SaveChangesAsync();
 
-            if (reservation.User != null)
+            if (reservation.Client?.User != null)
             {
-                await _emailService.SendEmailAsync(reservation.User.Email, "Reservation Rejected", $"Your reservation for {reservation.Quantity} kg on {reservation.Date:yyyy-MM-dd} has been rejected.");
+                await _emailService.SendEmailAsync(reservation.Client.User.Email, "Reservation Rejected", $"Your reservation for {reservation.Quantity} kg on {reservation.Date:yyyy-MM-dd} has been rejected.");
             }
 
             return RedirectToAction(nameof(Index));
@@ -201,7 +222,7 @@ namespace HazelnutVeb.Controllers
         {
             try
             {
-                var reservation = await _context.Reservations.Include(r => r.User).FirstOrDefaultAsync(r => r.Id == id);
+                var reservation = await _context.Reservations.Include(r => r.Client).ThenInclude(c => c.User).FirstOrDefaultAsync(r => r.Id == id);
                 if (reservation == null || reservation.Status != "Approved")
                 {
                     return NotFound();
@@ -216,16 +237,11 @@ namespace HazelnutVeb.Controllers
                     QuantityKg = reservation.Quantity,
                     PricePerKg = pricePerKg,
                     Total = reservation.Quantity * pricePerKg,
-                    ClientName = reservation.User?.Email ?? "Unknown"
+                    ClientName = reservation.Client?.User?.Email ?? "Unknown"
                 };
 
                 _context.Sales.Add(sale);
-                
-                var client = await _context.Clients.FirstOrDefaultAsync(c => c.UserId == reservation.UserId);
-                if (client != null)
-                {
-                    _context.Entry(sale).Property("ClientId").CurrentValue = client.Id;
-                }
+                _context.Entry(sale).Property("ClientId").CurrentValue = reservation.ClientId;
 
                 await _context.SaveChangesAsync();
 
