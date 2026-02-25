@@ -2,11 +2,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
 using HazelnutVeb.Data;
 using HazelnutVeb.Models;
 
@@ -15,14 +12,10 @@ namespace HazelnutVeb.Controllers
     public class AccountController : Controller
     {
         private readonly AppDbContext _context;
-        private readonly UserManager<User> _userManager;
-        private readonly SignInManager<User> _signInManager;
 
-        public AccountController(AppDbContext context, UserManager<User> userManager, SignInManager<User> signInManager)
+        public AccountController(AppDbContext context)
         {
             _context = context;
-            _userManager = userManager;
-            _signInManager = signInManager;
         }
 
         [HttpGet]
@@ -37,23 +30,35 @@ namespace HazelnutVeb.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var user = await _userManager.FindByEmailAsync(model.Email);
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == model.Email);
 
             if (user == null)
             {
-                ViewBag.Error = "USER NOT FOUND";
+                ViewBag.Error = "Invalid email or password";
                 return View(model);
             }
 
-            var passwordValid = await _userManager.CheckPasswordAsync(user, model.Password);
+            bool valid = BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash);
 
-            if (!passwordValid)
+            if (!valid)
             {
-                ViewBag.Error = "WRONG PASSWORD";
+                ViewBag.Error = "Invalid email or password";
                 return View(model);
             }
 
-            await _signInManager.SignInAsync(user, isPersistent: false);
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, user.FullName ?? user.Email ?? string.Empty),
+                new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
+                new Claim(ClaimTypes.Role, user.Role ?? "Client"),
+                new Claim("UserId", user.Id.ToString())
+            };
+
+            var claimsIdentity = new ClaimsIdentity(claims, "CookieAuth");
+            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+
+            await HttpContext.SignInAsync("CookieAuth", claimsPrincipal);
 
             return RedirectToAction("Index", "Home");
         }
@@ -85,7 +90,7 @@ namespace HazelnutVeb.Controllers
                 return View();
             }
 
-            if (await _userManager.FindByEmailAsync(email) != null)
+            if (await _context.Users.AnyAsync(u => u.Email == email))
             {
                 ViewBag.ErrorMessage = "Email is already registered.";
                 return View();
@@ -94,26 +99,25 @@ namespace HazelnutVeb.Controllers
             var user = new User
             {
                 UserName = email,
+                FullName = email,
                 Email = email,
-                PasswordHash = HashPassword(password)
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
+                Role = "Client"
             };
 
-            var createResult = await _userManager.CreateAsync(user);
-            if (createResult.Succeeded)
-            {
-                await _userManager.AddToRoleAsync(user, "Client");
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
 
-                bool clientExists = await _context.Clients.AnyAsync(c => c.Email == user.Email);
-                if (!clientExists)
+            bool clientExists = await _context.Clients.AnyAsync(c => c.Email == user.Email);
+            if (!clientExists)
+            {
+                var client = new Client
                 {
-                    var client = new Client
-                    {
-                        Name = user.Email!,
-                        Email = user.Email
-                    };
-                    _context.Clients.Add(client);
-                    await _context.SaveChangesAsync();
-                }
+                    Name = user.Email!,
+                    Email = user.Email
+                };
+                _context.Clients.Add(client);
+                await _context.SaveChangesAsync();
             }
 
             return RedirectToAction("Login");
@@ -121,17 +125,8 @@ namespace HazelnutVeb.Controllers
 
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return RedirectToAction("Login", "Account");
-        }
-
-        private string HashPassword(string password)
-        {
-            using (var sha256 = SHA256.Create())
-            {
-                byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-                return Convert.ToBase64String(bytes);
-            }
+            await HttpContext.SignOutAsync("CookieAuth");
+            return RedirectToAction("Login");
         }
     }
 }

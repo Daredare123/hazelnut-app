@@ -4,52 +4,53 @@ using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using HazelnutVeb.Data;
 using HazelnutVeb.Models;
-using Microsoft.AspNetCore.Identity;
 
 namespace HazelnutVeb.Controllers
 {
     [Authorize(Roles = "Admin")]
     public class UsersController : Controller
     {
-        private readonly UserManager<User> _userManager;
+        private readonly AppDbContext _context;
 
-        public UsersController(UserManager<User> userManager)
+        public UsersController(AppDbContext context)
         {
-            _userManager = userManager;
+            _context = context;
         }
 
         public async Task<IActionResult> Index()
         {
-            var users = await _userManager.Users.ToListAsync();
+            var users = await _context.Users.ToListAsync();
             return View(users);
         }
 
         [HttpPost]
-        public async Task<IActionResult> PromoteToAdmin(string id)
+        public async Task<IActionResult> PromoteToAdmin(int id)
         {
-            var user = await _userManager.FindByIdAsync(id);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
             if (user != null)
             {
-                if (!await _userManager.IsInRoleAsync(user, "Admin"))
+                if (user.Role != "Admin")
                 {
-                    await _userManager.AddToRoleAsync(user, "Admin");
+                    user.Role = "Admin";
+                    await _context.SaveChangesAsync();
                 }
             }
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
-        public async Task<IActionResult> DemoteToClient(string id)
+        public async Task<IActionResult> DemoteToClient(int id)
         {
-            var user = await _userManager.FindByIdAsync(id);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
             if (user != null)
             {
                 // Prevent Admin from demoting themselves.
                 if (user.Email != User.Identity?.Name)
                 {
-                    if (await _userManager.IsInRoleAsync(user, "Admin"))
+                    if (user.Role == "Admin")
                     {
-                        await _userManager.RemoveFromRoleAsync(user, "Admin");
+                        user.Role = "Client";
+                        await _context.SaveChangesAsync();
                     }
                 }
             }

@@ -8,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 using HazelnutVeb.Data;
 using HazelnutVeb.Models;
 using HazelnutVeb.Services;
-using Microsoft.AspNetCore.Identity;
 
 namespace HazelnutVeb.Controllers
 {
@@ -18,14 +17,12 @@ namespace HazelnutVeb.Controllers
         private readonly AppDbContext _context;
         private readonly NotificationService _notificationService;
         private readonly EmailService _emailService;
-        private readonly UserManager<User> _userManager;
 
-        public ReservationsController(AppDbContext context, NotificationService notificationService, EmailService emailService, UserManager<User> userManager)
+        public ReservationsController(AppDbContext context, NotificationService notificationService, EmailService emailService)
         {
             _context = context;
             _notificationService = notificationService;
             _emailService = emailService;
-            _userManager = userManager;
         }
 
         public async Task<IActionResult> Index()
@@ -37,9 +34,9 @@ namespace HazelnutVeb.Controllers
                     .AsQueryable();
 
                 var email = User.Identity?.Name;
-                var currentUser = await _userManager.FindByEmailAsync(email);
+                var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
 
-                if (currentUser != null && !await _userManager.IsInRoleAsync(currentUser, "Admin"))
+                if (currentUser != null && currentUser.Role != "Admin")
                 {
                     query = query.Where(r => r.Client.Email == email);
                 }
@@ -150,7 +147,7 @@ namespace HazelnutVeb.Controllers
                 
                 await _context.SaveChangesAsync();
 
-                var admins = await _userManager.GetUsersInRoleAsync("Admin");
+                var admins = await _context.Users.Where(u => u.Role == "Admin").ToListAsync();
                 foreach (var admin in admins)
                 {
                     if (!string.IsNullOrEmpty(admin.Email))

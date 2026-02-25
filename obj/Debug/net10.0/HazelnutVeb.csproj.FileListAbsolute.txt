@@ -199,4 +199,4 @@ C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\refint\Haz
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\HazelnutVeb.pdb
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\HazelnutVeb.genruntimeconfig.cache
 C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\obj\Debug\net10.0\ref\HazelnutVeb.dll
-C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\Microsoft.AspNetCore.Identity.EntityFrameworkCore.dll
+C:\Users\Dell_User\Desktop\hazelnut veb\HazelnutVeb\bin\Debug\net10.0\BCrypt.Net-Next.dll
