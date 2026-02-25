@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("HazelnutVeb")]
 [assembly: System.Reflection.AssemblyCopyrightAttribute(" ")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+abe3df79504a1f515b72080dc5abdd4e23f3afee")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c44a630379a0be838f8df9bb7626d2cd99549bb8")]
 [assembly: System.Reflection.AssemblyProductAttribute("HazelnutVeb")]
 [assembly: System.Reflection.AssemblyTitleAttribute("HazelnutVeb")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
