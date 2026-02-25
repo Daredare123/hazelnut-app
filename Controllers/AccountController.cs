@@ -16,11 +16,13 @@ namespace HazelnutVeb.Controllers
     {
         private readonly AppDbContext _context;
         private readonly UserManager<User> _userManager;
+        private readonly SignInManager<User> _signInManager;
 
-        public AccountController(AppDbContext context, UserManager<User> userManager)
+        public AccountController(AppDbContext context, UserManager<User> userManager, SignInManager<User> signInManager)
         {
             _context = context;
             _userManager = userManager;
+            _signInManager = signInManager;
         }
 
         [HttpGet]
@@ -30,44 +32,19 @@ namespace HazelnutVeb.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(string email, string password)
+        public async Task<IActionResult> Login(string email, string password, bool rememberMe = false)
         {
             if (!string.IsNullOrEmpty(email) && !string.IsNullOrEmpty(password))
             {
-                var hash = HashPassword(password);
-                var user = await _userManager.FindByEmailAsync(email);
-                
-                // Allow fallback to EF lookup for legacy accounts before identity migration if needed, but FindByEmailAsync works.
-                if (user == null)
-                    user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email && u.PasswordHash == hash);
+                var result = await _signInManager.PasswordSignInAsync(
+                    email,
+                    password,
+                    rememberMe,
+                    lockoutOnFailure: false);
 
-                if (user != null && user.PasswordHash == hash)
+                if (result.Succeeded)
                 {
-                    var roles = await _userManager.GetRolesAsync(user);
-                    var userRole = roles.FirstOrDefault() ?? "Client";
-
-                    var claims = new List<Claim>
-                    {
-                        new Claim(ClaimTypes.Name, user.Email!),
-                        new Claim(ClaimTypes.Role, userRole)
-                    };
-
-                    var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                    var authProperties = new AuthenticationProperties();
-
-                    await HttpContext.SignInAsync(
-                        CookieAuthenticationDefaults.AuthenticationScheme,
-                        new ClaimsPrincipal(claimsIdentity),
-                        authProperties);
-
-                    if (userRole == "Admin")
-                    {
-                        return RedirectToAction("Dashboard", "Home");
-                    }
-                    else
-                    {
-                        return RedirectToAction("MyOrders", "Reservations");
-                    }
+                    return RedirectToAction("Index", "Home");
                 }
             }
 
