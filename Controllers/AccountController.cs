@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using HazelnutVeb.Data;
 using HazelnutVeb.Models;
 
@@ -14,10 +15,12 @@ namespace HazelnutVeb.Controllers
     public class AccountController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly UserManager<User> _userManager;
 
-        public AccountController(AppDbContext context)
+        public AccountController(AppDbContext context, UserManager<User> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         [HttpGet]
@@ -32,14 +35,21 @@ namespace HazelnutVeb.Controllers
             if (!string.IsNullOrEmpty(email) && !string.IsNullOrEmpty(password))
             {
                 var hash = HashPassword(password);
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email && u.PasswordHash == hash);
+                var user = await _userManager.FindByEmailAsync(email);
+                
+                // Allow fallback to EF lookup for legacy accounts before identity migration if needed, but FindByEmailAsync works.
+                if (user == null)
+                    user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email && u.PasswordHash == hash);
 
-                if (user != null)
+                if (user != null && user.PasswordHash == hash)
                 {
+                    var roles = await _userManager.GetRolesAsync(user);
+                    var userRole = roles.FirstOrDefault() ?? "Client";
+
                     var claims = new List<Claim>
                     {
-                        new Claim(ClaimTypes.Name, user.Email),
-                        new Claim(ClaimTypes.Role, user.Role)
+                        new Claim(ClaimTypes.Name, user.Email!),
+                        new Claim(ClaimTypes.Role, userRole)
                     };
 
                     var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -50,7 +60,7 @@ namespace HazelnutVeb.Controllers
                         new ClaimsPrincipal(claimsIdentity),
                         authProperties);
 
-                    if (user.Role == "Admin")
+                    if (userRole == "Admin")
                     {
                         return RedirectToAction("Dashboard", "Home");
                     }
@@ -92,7 +102,7 @@ namespace HazelnutVeb.Controllers
                 return View();
             }
 
-            if (await _context.Users.AnyAsync(u => u.Email == email))
+            if (await _userManager.FindByEmailAsync(email) != null)
             {
                 ViewBag.ErrorMessage = "Email is already registered.";
                 return View();
@@ -100,22 +110,22 @@ namespace HazelnutVeb.Controllers
 
             var user = new User
             {
+                UserName = email,
                 Email = email,
-                PasswordHash = HashPassword(password),
-                Role = "Client"
+                PasswordHash = HashPassword(password)
             };
 
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-
-            if (user.Role == "Client")
+            var createResult = await _userManager.CreateAsync(user);
+            if (createResult.Succeeded)
             {
+                await _userManager.AddToRoleAsync(user, "Client");
+
                 bool clientExists = await _context.Clients.AnyAsync(c => c.Email == user.Email);
                 if (!clientExists)
                 {
                     var client = new Client
                     {
-                        Name = user.Email,
+                        Name = user.Email!,
                         Email = user.Email
                     };
                     _context.Clients.Add(client);

@@ -1,4 +1,5 @@
 @model IEnumerable<HazelnutVeb.Models.User>
+@inject Microsoft.AspNetCore.Identity.UserManager<HazelnutVeb.Models.User> UserManager
 @{
     ViewData["Title"] = "Users Management";
 }
@@ -23,7 +24,7 @@
                         <tr>
                             <td>@user.Email</td>
                             <td>
-                                @if (user.Role == "Admin")
+                                @if (await UserManager.IsInRoleAsync(user, "Admin"))
                                 {
                                     <span class="badge bg-success">Admin</span>
                                 }
@@ -33,7 +34,7 @@
                                 }
                             </td>
                             <td>
-                                @if (user.Role == "Client")
+                                @if (!await UserManager.IsInRoleAsync(user, "Admin"))
                                 {
                                     <form asp-action="PromoteToAdmin" method="post" style="display:inline;">
                                         <input type="hidden" name="id" value="@user.Id" />
@@ -42,7 +43,7 @@
                                         </button>
                                     </form>
                                 }
-                                else if (user.Role == "Admin" && user.Email != User.Identity?.Name)
+                                else if (await UserManager.IsInRoleAsync(user, "Admin") && user.Email != User.Identity?.Name)
                                 {
                                     <form asp-action="DemoteToClient" method="post" style="display:inline;">
                                         <input type="hidden" name="id" value="@user.Id" />

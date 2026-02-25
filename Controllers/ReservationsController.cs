@@ -18,9 +18,9 @@ namespace HazelnutVeb.Controllers
         private readonly AppDbContext _context;
         private readonly NotificationService _notificationService;
         private readonly EmailService _emailService;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<User> _userManager;
 
-        public ReservationsController(AppDbContext context, NotificationService notificationService, EmailService emailService, UserManager<IdentityUser> userManager)
+        public ReservationsController(AppDbContext context, NotificationService notificationService, EmailService emailService, UserManager<User> userManager)
         {
             _context = context;
             _notificationService = notificationService;
@@ -37,9 +37,9 @@ namespace HazelnutVeb.Controllers
                     .AsQueryable();
 
                 var email = User.Identity?.Name;
-                var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+                var currentUser = await _userManager.FindByEmailAsync(email);
 
-                if (currentUser != null && currentUser.Role != "Admin")
+                if (currentUser != null && !await _userManager.IsInRoleAsync(currentUser, "Admin"))
                 {
                     query = query.Where(r => r.Client.Email == email);
                 }
