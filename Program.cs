@@ -58,7 +58,7 @@ if (!app.Environment.IsDevelopment())
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
+    // db.Database.Migrate(); // Temporarily disabled
     
     // Seed Inventory if empty ensuring at least one record (Preserved business logic)
     if (!db.Inventory.Any())
