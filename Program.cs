@@ -9,11 +9,15 @@ using HazelnutVeb.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add connection string and services
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+// Ensure configuration includes environment variables (default behavior is usually enough, but explicitly preserving it)
+builder.Configuration
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
 
-builder.Services.AddDbContext<HazelnutVeb.Data.AppDbContext>(options =>
-    options.UseNpgsql(connectionString));
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add controllers with views
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
@@ -51,28 +55,16 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-// Ensure database migrations run automatically on startup
 using (var scope = app.Services.CreateScope())
 {
-    var services = scope.ServiceProvider;
-    try
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+    
+    // Seed Inventory if empty ensuring at least one record (Preserved business logic)
+    if (!db.Inventory.Any())
     {
-        var context = services.GetRequiredService<HazelnutVeb.Data.AppDbContext>();
-        
-        // Use Migrate instead of EnsureCreated to execute all EF snapshots correctly
-        context.Database.Migrate();
-
-        // Seed Inventory if empty ensuring at least one record
-        if (!context.Inventory.Any())
-        {
-            context.Inventory.Add(new Inventory { TotalKg = 0 });
-            context.SaveChanges();
-        }
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred creating/initializing the DB.");
+        db.Inventory.Add(new Inventory { TotalKg = 0 });
+        db.SaveChanges();
     }
 }
 
