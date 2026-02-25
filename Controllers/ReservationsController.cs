@@ -18,9 +18,9 @@ namespace HazelnutVeb.Controllers
         private readonly AppDbContext _context;
         private readonly NotificationService _notificationService;
         private readonly EmailService _emailService;
-        private readonly UserManager<User> _userManager;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public ReservationsController(AppDbContext context, NotificationService notificationService, EmailService emailService, UserManager<User> userManager)
+        public ReservationsController(AppDbContext context, NotificationService notificationService, EmailService emailService, UserManager<IdentityUser> userManager)
         {
             _context = context;
             _notificationService = notificationService;
