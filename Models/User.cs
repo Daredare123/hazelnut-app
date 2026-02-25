@@ -1,10 +1,8 @@
+ using Microsoft.AspNetCore.Identity;
+
 namespace HazelnutVeb.Models
 {
-    public class User
+    public class User : IdentityUser
     {
-        public int Id { get; set; }
-        public required string Email { get; set; }
-        public required string PasswordHash { get; set; }
-        public required string Role { get; set; }
     }
 }
