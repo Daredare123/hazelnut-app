@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using HazelnutVeb.Data;
 using HazelnutVeb.Models;
 using HazelnutVeb.Services;
+using Microsoft.AspNetCore.Identity;
 
 namespace HazelnutVeb.Controllers
 {
@@ -17,12 +18,14 @@ namespace HazelnutVeb.Controllers
         private readonly AppDbContext _context;
         private readonly NotificationService _notificationService;
         private readonly EmailService _emailService;
+        private readonly UserManager<User> _userManager;
 
-        public ReservationsController(AppDbContext context, NotificationService notificationService, EmailService emailService)
+        public ReservationsController(AppDbContext context, NotificationService notificationService, EmailService emailService, UserManager<User> userManager)
         {
             _context = context;
             _notificationService = notificationService;
             _emailService = emailService;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> Index()
@@ -146,19 +149,24 @@ namespace HazelnutVeb.Controllers
                 _context.Update(inventory);
                 
                 await _context.SaveChangesAsync();
-                
-                await _emailService.SendEmailAsync(
-                    "stojanceskidario12@gmail.com",
-                    "New Reservation Created",
-                    $"A new reservation has been created by {client.Name} for {reservation.Date} with quantity {reservation.Quantity}."
-                );
+
+                var admins = await _userManager.GetUsersInRoleAsync("Admin");
+                foreach (var admin in admins)
+                {
+                    if (!string.IsNullOrEmpty(admin.Email))
+                    {
+                        await _emailService.SendEmailAsync(
+                            admin.Email,
+                            "New Reservation Created",
+                            $"A new reservation has been created by {client.Name} for {reservation.Date} with quantity {reservation.Quantity}."
+                        );
+                    }
+                }
 
                 if (inventory.TotalKg <= 5)
                 {
                     await _notificationService.SendLowInventoryNotification(inventory.TotalKg);
                 }
-
-                await _emailService.SendEmailAsync("admin@hazelnut.com", "New Reservation", $"A new reservation for {reservation.Quantity} kg on {reservation.Date:yyyy-MM-dd} is pending approval.");
 
                 return RedirectToAction(nameof(Index));
             }
