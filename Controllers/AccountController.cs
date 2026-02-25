@@ -41,23 +41,21 @@ namespace HazelnutVeb.Controllers
 
             if (user == null)
             {
-                ModelState.AddModelError("", "User not found.");
+                ViewBag.Error = "USER NOT FOUND";
                 return View(model);
             }
 
-            var result = await _signInManager.PasswordSignInAsync(
-                user,
-                model.Password,
-                model.RememberMe,
-                lockoutOnFailure: false);
+            var passwordValid = await _userManager.CheckPasswordAsync(user, model.Password);
 
-            if (result.Succeeded)
+            if (!passwordValid)
             {
-                return RedirectToAction("Index", "Home");
+                ViewBag.Error = "WRONG PASSWORD";
+                return View(model);
             }
 
-            ModelState.AddModelError("", "Invalid login attempt.");
-            return View(model);
+            await _signInManager.SignInAsync(user, isPersistent: false);
+
+            return RedirectToAction("Index", "Home");
         }
 
         [HttpGet]

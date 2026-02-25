@@ -35,6 +35,10 @@
                             Don't have an account? <a href="/Account/Register">Register here</a>
                         </div>
                     </form>
+                    @if (ViewBag.Error != null)
+                    {
+                        @ViewBag.Error
+                    }
                 </div>
             </div>
         </div>
