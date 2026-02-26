@@ -147,17 +147,27 @@ namespace HazelnutVeb.Controllers
                 
                 await _context.SaveChangesAsync();
 
-                var admins = await _context.Users.Where(u => u.Role == "Admin").ToListAsync();
-                foreach (var admin in admins)
+                try
                 {
-                    if (!string.IsNullOrEmpty(admin.Email))
+                    var admins = await _context.Users
+                        .Where(u => u.Role == "Admin")
+                        .ToListAsync();
+
+                    foreach (var admin in admins)
                     {
-                        await _emailService.SendEmailAsync(
-                            admin.Email,
-                            "New Reservation Created",
-                            $"A new reservation has been created by {client.Name} for {reservation.Date} with quantity {reservation.Quantity}."
-                        );
+                        if (!string.IsNullOrEmpty(admin.Email))
+                        {
+                            await _emailService.SendEmailAsync(
+                                admin.Email,
+                                "New Reservation",
+                                $"New reservation for {reservation.Quantity} kg on {reservation.Date}"
+                            );
+                        }
                     }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error sending admin notification emails: {ex.Message}");
                 }
 
                 if (inventory.TotalKg <= 5)
