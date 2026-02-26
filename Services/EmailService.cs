@@ -1,14 +1,27 @@
-using System.Threading.Tasks;
-
-namespace HazelnutVeb.Services
+public async Task SendEmailAsync(string to, string subject, string body)
 {
-    public class EmailService
+    try
     {
-        public Task SendEmailAsync(string toEmail, string subject, string body)
+        var mail = new MailMessage();
+        mail.From = new MailAddress(_username);
+        mail.To.Add(to);
+        mail.Subject = subject;
+        mail.Body = body;
+        mail.IsBodyHtml = false;
+
+        var smtp = new SmtpClient("smtp.gmail.com")
         {
-            // Dummy implementation satisfying compiler requirements without modifying authentication/business logic
-            System.Console.WriteLine($"Email sent to {toEmail}: {subject}");
-            return Task.CompletedTask;
-        }
+            Port = 587,
+            Credentials = new NetworkCredential(_username, _password),
+            EnableSsl = true
+        };
+
+        await smtp.SendMailAsync(mail);
+
+        Console.WriteLine("EMAIL USPESNO ISPRATEN");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("EMAIL ERROR: " + ex.Message);
     }
 }
