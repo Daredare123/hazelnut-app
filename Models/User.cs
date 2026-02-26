@@ -8,9 +8,6 @@ namespace HazelnutVeb.Models
         [Key]
         public int Id { get; set; }
 
-        [StringLength(256)]
-        public string? UserName { get; set; }
-
         public string? FullName { get; set; }
 
         [StringLength(256)]

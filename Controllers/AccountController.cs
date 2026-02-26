@@ -98,7 +98,6 @@ namespace HazelnutVeb.Controllers
 
             var user = new User
             {
-                UserName = email,
                 FullName = email,
                 Email = email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
