@@ -149,6 +149,9 @@ namespace HazelnutVeb.Controllers
 
                 try
                 {
+                    var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+                    var fullName = user?.FullName ?? client.Name;
+
                     var admins = await _context.Users
                         .Where(u => u.Role == "Admin")
                         .ToListAsync();
@@ -159,8 +162,8 @@ namespace HazelnutVeb.Controllers
                         {
                             await _emailService.SendEmailAsync(
                                 admin.Email,
-                                "New Reservation",
-                                $"New reservation for {reservation.Quantity} kg on {reservation.Date}"
+                                "Нова резервација",
+                                $"Имате нова резервација.\n\nКлиент: {fullName}\nКоличина: {reservation.Quantity} кг\nДатум: {reservation.Date:dd.MM.yyyy}\n\nНајавете се во системот за да ја прегледате."
                             );
                         }
                     }
@@ -196,7 +199,21 @@ namespace HazelnutVeb.Controllers
 
             if (!string.IsNullOrEmpty(reservation.Client?.Email))
             {
-                await _emailService.SendEmailAsync(reservation.Client.Email, "Reservation Approved", $"Your reservation for {reservation.Quantity} kg on {reservation.Date:yyyy-MM-dd} has been approved.");
+                try
+                {
+                    var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == reservation.Client.Email);
+                    var fullName = user?.FullName ?? reservation.Client.Name;
+
+                    await _emailService.SendEmailAsync(
+                        reservation.Client.Email, 
+                        "Вашата резервација е прифатена", 
+                        $"Почитуван/а {fullName},\n\nВашата резервација од {reservation.Quantity} кг за датум {reservation.Date:dd.MM.yyyy} е успешно прифатена.\n\nВи благодариме."
+                    );
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error sending approval email: {ex.Message}");
+                }
             }
 
             return RedirectToAction(nameof(Index));
@@ -222,7 +239,21 @@ namespace HazelnutVeb.Controllers
 
             if (!string.IsNullOrEmpty(reservation.Client?.Email))
             {
-                await _emailService.SendEmailAsync(reservation.Client.Email, "Reservation Rejected", $"Your reservation for {reservation.Quantity} kg on {reservation.Date:yyyy-MM-dd} has been rejected.");
+                try
+                {
+                    var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == reservation.Client.Email);
+                    var fullName = user?.FullName ?? reservation.Client.Name;
+
+                    await _emailService.SendEmailAsync(
+                        reservation.Client.Email, 
+                        "Вашата резервација е одбиена", 
+                        $"Почитуван/а {fullName},\n\nЗа жал, вашата резервација од {reservation.Quantity} кг за датум {reservation.Date:dd.MM.yyyy} не можеме да ја реализираме.\n\nВе молиме контактирајте не за повеќе информации."
+                    );
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error sending rejection email: {ex.Message}");
+                }
             }
 
             return RedirectToAction(nameof(Index));
