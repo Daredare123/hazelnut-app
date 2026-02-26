@@ -1,27 +1,37 @@
-public async Task SendEmailAsync(string to, string subject, string body)
+using System.Net;
+using System.Net.Mail;
+using Microsoft.Extensions.Configuration;
+
+namespace HazelnutVeb.Services
 {
-    try
+    public class EmailService
     {
-        var mail = new MailMessage();
-        mail.From = new MailAddress(_username);
-        mail.To.Add(to);
-        mail.Subject = subject;
-        mail.Body = body;
-        mail.IsBodyHtml = false;
+        private readonly string _username;
+        private readonly string _password;
 
-        var smtp = new SmtpClient("smtp.gmail.com")
+        public EmailService(IConfiguration configuration)
         {
-            Port = 587,
-            Credentials = new NetworkCredential(_username, _password),
-            EnableSsl = true
-        };
+            _username = configuration["EmailSettings:Username"];
+            _password = configuration["EmailSettings:Password"];
+        }
 
-        await smtp.SendMailAsync(mail);
+        public async Task SendEmailAsync(string to, string subject, string body)
+        {
+            var mail = new MailMessage();
+            mail.From = new MailAddress(_username);
+            mail.To.Add(to);
+            mail.Subject = subject;
+            mail.Body = body;
+            mail.IsBodyHtml = false;
 
-        Console.WriteLine("EMAIL USPESNO ISPRATEN");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine("EMAIL ERROR: " + ex.Message);
+            var smtp = new SmtpClient("smtp.gmail.com")
+            {
+                Port = 587,
+                Credentials = new NetworkCredential(_username, _password),
+                EnableSsl = true
+            };
+
+            await smtp.SendMailAsync(mail);
+        }
     }
 }
