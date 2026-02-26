@@ -19,6 +19,7 @@
     <Content Remove="wwwroot\manifest.json" />
     <Content Remove="wwwroot\service-worker.js" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+    <PackageReference Include="SendGrid" Version="9.29.3" />
   </ItemGroup>
 
 </Project>
