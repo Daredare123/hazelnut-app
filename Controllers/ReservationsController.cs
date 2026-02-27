@@ -52,11 +52,13 @@ namespace HazelnutVeb.Controllers
             }
         }
 
+        [Authorize(Roles = "Client")]
         public IActionResult MyOrders()
         {
             return View();
         }
 
+        [Authorize(Roles = "Client")]
         public IActionResult Create()
         {
             return View(new Reservation { Date = DateTime.UtcNow });
@@ -64,6 +66,7 @@ namespace HazelnutVeb.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Client")]
         public async Task<IActionResult> Create([Bind("Quantity,Date")] Reservation reservation)
         {
             if (reservation == null)
@@ -153,7 +156,7 @@ namespace HazelnutVeb.Controllers
                     var fullName = user?.FullName ?? client.Name;
 
                     var admins = await _context.Users
-                        .Where(u => u.Role == "Admin")
+                        .Where(u => u.Role == "Admin" && u.Email != email)
                         .ToListAsync();
 
                     foreach (var admin in admins)
@@ -188,6 +191,7 @@ namespace HazelnutVeb.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Approve(int id)
         {
             var reservation = await _context.Reservations.Include(r => r.Client).FirstOrDefaultAsync(r => r.Id == id);
@@ -220,6 +224,7 @@ namespace HazelnutVeb.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Reject(int id)
         {
             var reservation = await _context.Reservations.Include(r => r.Client).FirstOrDefaultAsync(r => r.Id == id);
@@ -260,6 +265,7 @@ namespace HazelnutVeb.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Complete(int id, double pricePerKg)
         {
             try
@@ -296,6 +302,7 @@ namespace HazelnutVeb.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Cancel(int id)
         {
             try

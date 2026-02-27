@@ -32,6 +32,7 @@ namespace HazelnutVeb.Controllers
             return View();
         }
 
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Dashboard()
         {
             try 
